@@ -12,9 +12,14 @@ if [[ -z "$GOBIN" ]]; then
 fi
 
 # Get build dependencies
+pushd /tmp
 if [[ ! -e $GOBIN/staticcheck ]]; then
   go get honnef.co/go/tools/cmd/staticcheck
 fi
+if [[ ! -e $GOBIN/goimports ]]; then
+  go get golang.org/x/tools/cmd/goimports
+fi
+popd
 
 # Check format of Go files
 $PROJECT_HOME/scripts/check-gofmt.sh .
