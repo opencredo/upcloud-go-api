@@ -7,4 +7,4 @@ go:
 env:
   - CGO_ENABLED=0
 
-script: travis_wait 20 go test ./... -v -parallel 5 -timeout 60m
+script: travis_wait 20 go test ./... -v -parallel 1 -timeout 60m
