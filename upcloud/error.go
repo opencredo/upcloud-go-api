@@ -1,11 +1,29 @@
 package upcloud
 
-import "fmt"
+import (
+	"encoding/json"
+	"fmt"
+)
 
 // Error represents an error
 type Error struct {
-	ErrorCode    string `xml:"error_code"`
-	ErrorMessage string `xml:"error_message"`
+	ErrorCode    string `xml:"error_code" json:"error_code"`
+	ErrorMessage string `xml:"error_message" json:"error_message"`
+}
+
+func (e *Error) UnmarshalJSON(b []byte) error {
+	fmt.Println("Unmarshalling: ", string(b))
+
+	var v map[string]map[string]string
+	err := json.Unmarshal(b, &v)
+	if err != nil {
+		return err
+	}
+
+	e.ErrorCode = v["error"]["error_code"]
+	e.ErrorMessage = v["error"]["error_message"]
+
+	return nil
 }
 
 // Error implements the Error interface

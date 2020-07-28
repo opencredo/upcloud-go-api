@@ -52,9 +52,9 @@ func (s *Servers) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-type TagsType []string
+type TagSlice []string
 
-func (t *TagsType) UnmarshalJSON(b []byte) error {
+func (t *TagSlice) UnmarshalJSON(b []byte) error {
 	v := struct {
 		Tags []string `json:"tag"`
 	}{}
@@ -77,7 +77,7 @@ type Server struct {
 	Plan         string   `xml:"plan" json:"plan"`
 	Progress     int      `xml:"progress" json:"progress"`
 	State        string   `xml:"state" json:"state"`
-	Tags         TagsType `xml:"tags>tag" json:"tags"`
+	Tags         TagSlice `xml:"tags>tag" json:"tags"`
 	Title        string   `xml:"title" json:"title"`
 	UUID         string   `xml:"uuid" json:"uuid"`
 	Zone         string   `xml:"zone" json:"zone"`
