@@ -1,6 +1,7 @@
 package service
 
 import (
+	"encoding/json"
 	"encoding/xml"
 	"fmt"
 	"time"
@@ -110,13 +111,17 @@ func (s *Service) GetServerConfigurations() (*upcloud.ServerConfigurations, erro
 // GetServers returns the available servers
 func (s *Service) GetServers() (*upcloud.Servers, error) {
 	servers := upcloud.Servers{}
-	response, err := s.basicGetRequest("/server")
+	response, err := s.basicJSONGetRequest("/server")
 
 	if err != nil {
 		return nil, parseServiceError(err)
 	}
 
-	xml.Unmarshal(response, &servers)
+	fmt.Println(string(response))
+	err = json.Unmarshal(response, &servers)
+	if err != nil {
+		return nil, fmt.Errorf("unable to unmarshal JSON: %s, %w", string(response), err)
+	}
 
 	return &servers, nil
 }
@@ -272,7 +277,7 @@ func (s *Service) DeleteServer(r *request.DeleteServerRequest) error {
 
 // DeleteServerAndStorages deletes the specified server and all attached storages
 func (s *Service) DeleteServerAndStorages(r *request.DeleteServerAndStoragesRequest) error {
-	err := s.client.PerformDeleteRequest(s.client.CreateRequestUrl(r.RequestURL()))
+	err := s.client.PerformJSONDeleteRequest(s.client.CreateRequestUrl(r.RequestURL()))
 
 	if err != nil {
 		return parseServiceError(err)
@@ -706,6 +711,18 @@ func (s *Service) GetTags() (*upcloud.Tags, error) {
 func (s *Service) basicGetRequest(location string) ([]byte, error) {
 	requestUrl := s.client.CreateRequestUrl(location)
 	response, err := s.client.PerformGetRequest(requestUrl)
+
+	if err != nil {
+		return nil, parseServiceError(err)
+	}
+
+	return response, nil
+}
+
+// Wrapper that performs a GET request to the specified location and returns the response or a service error
+func (s *Service) basicJSONGetRequest(location string) ([]byte, error) {
+	requestURL := s.client.CreateRequestUrl(location)
+	response, err := s.client.PerformJSONGetRequest(requestURL)
 
 	if err != nil {
 		return nil, parseServiceError(err)

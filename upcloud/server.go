@@ -1,5 +1,9 @@
 package upcloud
 
+import (
+	"encoding/json"
+)
+
 // Constants
 const (
 	ServerStateStarted     = "started"
@@ -27,22 +31,56 @@ type ServerConfiguration struct {
 
 // Servers represents a /server response
 type Servers struct {
-	Servers []Server `xml:"server"`
+	Servers []Server `xml:"server" json:"servers"`
+}
+
+func (s *Servers) UnmarshalJSON(b []byte) error {
+	type serverWrapper struct {
+		Servers []Server `json:"server"`
+	}
+
+	v := struct {
+		Servers serverWrapper `json:"servers"`
+	}{}
+	err := json.Unmarshal(b, &v)
+	if err != nil {
+		return err
+	}
+
+	s.Servers = v.Servers.Servers
+
+	return nil
+}
+
+type TagsType []string
+
+func (t *TagsType) UnmarshalJSON(b []byte) error {
+	v := struct {
+		Tags []string `json:"tag"`
+	}{}
+	err := json.Unmarshal(b, &v)
+	if err != nil {
+		return err
+	}
+
+	(*t) = v.Tags
+
+	return nil
 }
 
 // Server represents a server
 type Server struct {
-	CoreNumber   int      `xml:"core_number"`
-	Hostname     string   `xml:"hostname"`
-	License      float64  `xml:"license"`
-	MemoryAmount int      `xml:"memory_amount"`
-	Plan         string   `xml:"plan"`
-	Progress     int      `xml:"progress"`
-	State        string   `xml:"state"`
-	Tags         []string `xml:"tags>tag"`
-	Title        string   `xml:"title"`
-	UUID         string   `xml:"uuid"`
-	Zone         string   `xml:"zone"`
+	CoreNumber   int      `xml:"core_number" json:"core_number,string"`
+	Hostname     string   `xml:"hostname" json:"hostname"`
+	License      float64  `xml:"license" json:"license"`
+	MemoryAmount int      `xml:"memory_amount" json:"memory_amount,string"`
+	Plan         string   `xml:"plan" json:"plan"`
+	Progress     int      `xml:"progress" json:"progress"`
+	State        string   `xml:"state" json:"state"`
+	Tags         TagsType `xml:"tags>tag" json:"tags"`
+	Title        string   `xml:"title" json:"title"`
+	UUID         string   `xml:"uuid" json:"uuid"`
+	Zone         string   `xml:"zone" json:"zone"`
 }
 
 // ServerDetails represents details about a server
