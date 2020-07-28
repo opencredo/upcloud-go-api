@@ -114,7 +114,7 @@ func (s *Service) GetServers() (*upcloud.Servers, error) {
 	response, err := s.basicJSONGetRequest("/server")
 
 	if err != nil {
-		return nil, parseServiceError(err)
+		return nil, parseJSONServiceError(err)
 	}
 
 	fmt.Println(string(response))
@@ -280,7 +280,7 @@ func (s *Service) DeleteServerAndStorages(r *request.DeleteServerAndStoragesRequ
 	err := s.client.PerformJSONDeleteRequest(s.client.CreateRequestUrl(r.RequestURL()))
 
 	if err != nil {
-		return parseServiceError(err)
+		return parseJSONServiceError(err)
 	}
 
 	return nil
@@ -738,6 +738,20 @@ func parseServiceError(err error) error {
 		serviceError := upcloud.Error{}
 		responseBody := clientError.ResponseBody
 		xml.Unmarshal(responseBody, &serviceError)
+
+		return &serviceError
+	}
+
+	return err
+}
+
+// Parses an error returned from the client into a service error object
+func parseJSONServiceError(err error) error {
+	// Parse service errors
+	if clientError, ok := err.(*client.Error); ok {
+		serviceError := upcloud.Error{}
+		responseBody := clientError.ResponseBody
+		json.Unmarshal(responseBody, &serviceError)
 
 		return &serviceError
 	}

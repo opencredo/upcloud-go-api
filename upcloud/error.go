@@ -12,8 +12,6 @@ type Error struct {
 }
 
 func (e *Error) UnmarshalJSON(b []byte) error {
-	fmt.Println("Unmarshalling: ", string(b))
-
 	var v map[string]map[string]string
 	err := json.Unmarshal(b, &v)
 	if err != nil {

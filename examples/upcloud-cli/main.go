@@ -85,6 +85,14 @@ func deleteServers(s *service.Service) error {
 					fmt.Fprintf(os.Stderr, "Unable to stop server: %#v\n", err)
 					return err
 				}
+				_, err = s.WaitForServerState(&request.WaitForServerStateRequest{
+					UUID:         server.UUID,
+					DesiredState: upcloud.ServerStateStopped,
+				})
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "Failed to wait for server to reach desired state: %#v", err)
+					return err
+				}
 			}
 			fmt.Printf("Deleting %s (%s)\n", server.Title, server.UUID)
 			err := s.DeleteServerAndStorages(&request.DeleteServerAndStoragesRequest{
