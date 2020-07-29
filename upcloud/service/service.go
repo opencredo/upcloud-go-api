@@ -3,6 +3,7 @@ package service
 import (
 	"encoding/json"
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"time"
 
@@ -156,6 +157,16 @@ func (s *Service) CreateServer(r *request.CreateServerRequest) (*upcloud.ServerD
 	}
 
 	return &serverDetails, nil
+}
+
+func (s *Service) CreateServerOption1(json string) (string, error) {
+	response, err := s.client.PerformJSONPostRequest(s.client.CreateRequestUrl("/server"), []byte(json))
+
+	if err != nil {
+		return "", errors.New(string(err.(*client.Error).ResponseBody))
+	}
+
+	return string(response), nil
 }
 
 // WaitForServerState blocks execution until the specified server has entered the specified state. If the state changes

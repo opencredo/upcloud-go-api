@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
@@ -63,6 +64,10 @@ func run() int {
 		if err := createServer(s); err != nil {
 			return 3
 		}
+	case "createserveropt1":
+		if err := createServerOption1(s); err != nil {
+			return 3
+		}
 	default:
 		fmt.Fprintln(os.Stderr, "Unknown command: ", command)
 		return 99
@@ -114,6 +119,70 @@ func createServer(s *service.Service) error {
 	}
 
 	fmt.Printf("Created server: %#v\n", details)
+
+	return nil
+}
+
+func createServerOption1(s *service.Service) error {
+	fmt.Println("Creating server")
+	details, err := s.CreateServerOption1(
+		fmt.Sprintf(`
+    {
+      "server": {
+        "hostname": "%s",
+        "ip_addresses": {
+          "ip_address": [
+            {
+              "access": "private",
+              "family": "IPv4"
+            }
+          ]
+        },
+        "storage_devices": {
+          "storage_device": [
+            {
+              "action": "clone",
+              "storage": "01000000-0000-4000-8000-000050010400",
+              "title": "Centos8 from a template",
+              "size": 50,
+              "tier": "maxiops"
+            }
+          ]
+        },
+        "title": "%s",
+        "zone": "fi-hel2",
+        "plan": "1xCPU-1GB"
+      }
+    }
+`, "stuart.example.com", fmt.Sprintf("example-cli-server-%04d", rand.Int31n(1000))))
+
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Unable to create server: %#v\n", err)
+		return err
+	}
+	spew.Println(details)
+	var d map[string]interface{}
+	err = json.Unmarshal([]byte(details), &d)
+	if err != nil {
+		fmt.Fprint(os.Stderr, "Unable to unmarshal object: ", err)
+		return err
+	}
+	uuid := d["server"].(map[string]interface{})["uuid"].(string)
+	if len(uuid) == 0 {
+		fmt.Fprintf(os.Stderr, "UUID missing")
+		return errors.New("UUID too short")
+	}
+	dets, err := s.WaitForServerState(&request.WaitForServerStateRequest{
+		UUID:         uuid,
+		DesiredState: upcloud.ServerStateStarted,
+		Timeout:      1 * time.Minute,
+	})
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Unable to wait for server: %#v", err)
+		return err
+	}
+
+	fmt.Printf("Created server: %#v\n", dets)
 
 	return nil
 }
