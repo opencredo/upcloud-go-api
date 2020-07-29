@@ -143,14 +143,17 @@ func (s *Service) GetServerDetails(r *request.GetServerDetailsRequest) (*upcloud
 // CreateServer creates a server and returns the server details for the newly created server
 func (s *Service) CreateServer(r *request.CreateServerRequest) (*upcloud.ServerDetails, error) {
 	serverDetails := upcloud.ServerDetails{}
-	requestBody, _ := xml.Marshal(r)
-	response, err := s.client.PerformPostRequest(s.client.CreateRequestUrl(r.RequestURL()), requestBody)
+	requestBody, _ := json.Marshal(r)
+	response, err := s.client.PerformJSONPostRequest(s.client.CreateRequestUrl(r.RequestURL()), requestBody)
 
 	if err != nil {
-		return nil, parseServiceError(err)
+		return nil, parseJSONServiceError(err)
 	}
 
-	xml.Unmarshal(response, &serverDetails)
+	err = json.Unmarshal(response, &serverDetails)
+	if err != nil {
+		return nil, err
+	}
 
 	return &serverDetails, nil
 }

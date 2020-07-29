@@ -91,13 +91,30 @@ func (c *Client) PerformPostRequest(url string, requestBody []byte) ([]byte, err
 		bodyReader = bytes.NewBuffer(requestBody)
 	}
 
-	request, err := http.NewRequest("POST", url, bodyReader)
+	request, err := http.NewRequest(http.MethodPost, url, bodyReader)
 
 	if err != nil {
 		return nil, err
 	}
 
 	return c.performRequest(request)
+}
+
+// PerformPostRequest performs a POST request to the specified URL and returns the response body and eventual errors
+func (c *Client) PerformJSONPostRequest(url string, requestBody []byte) ([]byte, error) {
+	var bodyReader io.Reader
+
+	if requestBody != nil {
+		bodyReader = bytes.NewBuffer(requestBody)
+	}
+
+	request, err := http.NewRequest(http.MethodPost, url, bodyReader)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return c.performJSONRequest(request)
 }
 
 // PerformPutRequest performs a PUT request to the specified URL and returns the response body and eventual errors

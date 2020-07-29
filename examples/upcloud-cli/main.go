@@ -4,13 +4,16 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"math/rand"
 	"os"
+	"time"
 
 	"git.sr.ht/~yoink00/goflenfig"
 	"github.com/UpCloudLtd/upcloud-go-api/upcloud"
 	"github.com/UpCloudLtd/upcloud-go-api/upcloud/client"
 	"github.com/UpCloudLtd/upcloud-go-api/upcloud/request"
 	"github.com/UpCloudLtd/upcloud-go-api/upcloud/service"
+	"github.com/davecgh/go-spew/spew"
 )
 
 var username string
@@ -20,6 +23,8 @@ func init() {
 	goflenfig.Prefix("UPCLOUD_")
 	goflenfig.StringVar(&username, "username", "", "UpCloud user name")
 	goflenfig.StringVar(&password, "password", "", "UpCloud password")
+
+	rand.Seed(time.Now().Unix())
 }
 
 func main() {
@@ -54,12 +59,63 @@ func run() int {
 		if err := deleteStorage(s); err != nil {
 			return 2
 		}
+	case "createserver":
+		if err := createServer(s); err != nil {
+			return 3
+		}
 	default:
 		fmt.Fprintln(os.Stderr, "Unknown command: ", command)
 		return 99
 	}
 
 	return 0
+}
+
+func createServer(s *service.Service) error {
+	fmt.Println("Creating server")
+	details, err := s.CreateServer(&request.CreateServerRequest{
+		Hostname: "stuart.example.com",
+		Title:    fmt.Sprintf("example-cli-server-%04d", rand.Int31n(1000)),
+		Zone:     "fi-hel2",
+		Plan:     "1xCPU-1GB",
+		StorageDevices: []upcloud.CreateServerStorageDevice{
+			{
+				Action:  upcloud.CreateServerStorageDeviceActionClone,
+				Storage: "01000000-0000-4000-8000-000050010400",
+				Title:   "Centos8 from a template",
+				Size:    50,
+				Tier:    upcloud.StorageTierMaxIOPS,
+			},
+		},
+		IPAddresses: []request.CreateServerIPAddress{
+			{
+				Access: upcloud.IPAddressAccessPrivate,
+				Family: upcloud.IPAddressFamilyIPv4,
+			},
+		},
+	})
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Unable to create server: %#v\n", err)
+		return err
+	}
+	spew.Println(details)
+	if len(details.UUID) == 0 {
+		fmt.Fprintf(os.Stderr, "UUID missing")
+		return errors.New("UUID too short")
+	}
+	details, err = s.WaitForServerState(&request.WaitForServerStateRequest{
+		UUID:         details.UUID,
+		DesiredState: upcloud.ServerStateStarted,
+		Timeout:      1 * time.Minute,
+	})
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Unable to wait for server: %#v", err)
+		return err
+	}
+
+	fmt.Printf("Created server: %#v\n", details)
+
+	return nil
 }
 
 func deleteServers(s *service.Service) error {
@@ -88,6 +144,7 @@ func deleteServers(s *service.Service) error {
 				_, err = s.WaitForServerState(&request.WaitForServerStateRequest{
 					UUID:         server.UUID,
 					DesiredState: upcloud.ServerStateStopped,
+					Timeout:      1 * time.Minute,
 				})
 				if err != nil {
 					fmt.Fprintf(os.Stderr, "Failed to wait for server to reach desired state: %#v", err)
