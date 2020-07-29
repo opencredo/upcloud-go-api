@@ -12,14 +12,16 @@ type Error struct {
 }
 
 func (e *Error) UnmarshalJSON(b []byte) error {
-	var v map[string]map[string]string
+	type localError Error
+	v := struct {
+		Error localError `json:"error"`
+	}{}
 	err := json.Unmarshal(b, &v)
 	if err != nil {
 		return err
 	}
 
-	e.ErrorCode = v["error"]["error_code"]
-	e.ErrorMessage = v["error"]["error_message"]
+	(*e) = Error(v.Error)
 
 	return nil
 }
