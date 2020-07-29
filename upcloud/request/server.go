@@ -96,11 +96,37 @@ func (r *CreateServerRequest) RequestURL() string {
 	return "/server"
 }
 
+type SSHKeySlice []string
+
+func (s *SSHKeySlice) UnmarshalJSON(b []byte) error {
+	v := struct {
+		SSHKey []string `json:"ssh_key"`
+	}{}
+	err := json.Unmarshal(b, &v)
+	if err != nil {
+		return err
+	}
+
+	(*s) = v.SSHKey
+
+	return nil
+}
+
+func (s SSHKeySlice) MarshalJSON() ([]byte, error) {
+	v := struct {
+		SSHKey []string `json:"ssh_key"`
+	}{}
+
+	v.SSHKey = s
+
+	return json.Marshal(v)
+}
+
 // LoginUser represents the login_user block when creating a new server
 type LoginUser struct {
-	CreatePassword string   `xml:"create_password,omitempty" json:"create_password,omitempty"`
-	Username       string   `xml:"username,omitempty" json:"username,omitempty"`
-	SSHKeys        []string `xml:"ssh_keys>ssh_key,omitempty" json:"ssh_keys"`
+	CreatePassword string      `xml:"create_password,omitempty" json:"create_password,omitempty"`
+	Username       string      `xml:"username,omitempty" json:"username,omitempty"`
+	SSHKeys        SSHKeySlice `xml:"ssh_keys>ssh_key,omitempty" json:"ssh_keys"`
 }
 
 // CreateServerIPAddress represents an IP address for a CreateServerRequest
