@@ -48,7 +48,7 @@ func TestUnmarshalServers(t *testing.T) {
                         "license": 0,
                         "memory_amount": "1024",
                         "plan": "1xCPU-1GB",
-                        "progress": 95,
+                        "progress": "95",
                         "state": "maintenance",
                         "tags": {
                             "tag": []
