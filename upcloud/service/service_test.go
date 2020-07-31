@@ -11,6 +11,7 @@ import (
 	"github.com/UpCloudLtd/upcloud-go-api/upcloud"
 	"github.com/UpCloudLtd/upcloud-go-api/upcloud/client"
 	"github.com/UpCloudLtd/upcloud-go-api/upcloud/request"
+	"github.com/hashicorp/go-cleanhttp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -33,7 +34,7 @@ func TestMain(m *testing.M) {
 func getService() *Service {
 	user, password := getCredentials()
 
-	c := client.New(user, password)
+	c := client.NewWithHTTPClient(user, password, cleanhttp.DefaultClient())
 	c.SetTimeout(time.Second * 300)
 
 	return New(c)
