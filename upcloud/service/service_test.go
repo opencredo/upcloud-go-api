@@ -539,7 +539,7 @@ func TestCreateBackup(t *testing.T) {
 		t,
 		backupStorageDetails.Origin,
 		storageDetails.UUID,
-		"The origin UUID %s of backup storage UUID %s does not match the actual origina UUID %s",
+		"The origin UUID %s of backup storage UUID %s does not match the actual origin UUID %s",
 		backupStorageDetails.Origin,
 		backupDetails.UUID,
 		storageDetails.UUID,
@@ -547,8 +547,8 @@ func TestCreateBackup(t *testing.T) {
 
 	assert.Greaterf(
 		t,
-		backupStorageDetails.Created,
-		timeBeforeBackup,
+		backupStorageDetails.Created.Unix(),
+		timeBeforeBackup.Unix(),
 		"The creation timestamp of backup storage UUID %s is too early: %v (should be after %v)",
 		backupDetails.UUID,
 		backupStorageDetails.Created,
@@ -557,8 +557,8 @@ func TestCreateBackup(t *testing.T) {
 
 	assert.Lessf(
 		t,
-		backupStorageDetails.Created,
-		timeAfterBackup,
+		backupStorageDetails.Created.Unix(),
+		timeAfterBackup.Unix(),
 		"The creation timestamp of backup storage UUID %s is too late: %v (should be before %v)",
 		backupDetails.UUID,
 		backupStorageDetails.Created,
