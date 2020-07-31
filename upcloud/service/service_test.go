@@ -545,7 +545,7 @@ func TestCreateBackup(t *testing.T) {
 		storageDetails.UUID,
 	)
 
-	assert.Greaterf(
+	assert.GreaterOrEqualf(
 		t,
 		backupStorageDetails.Created.UnixNano(),
 		timeBeforeBackup.UnixNano(),
@@ -555,7 +555,7 @@ func TestCreateBackup(t *testing.T) {
 		timeBeforeBackup,
 	)
 
-	assert.Lessf(
+	assert.LessOrEqualf(
 		t,
 		backupStorageDetails.Created.UnixNano(),
 		timeAfterBackup.UnixNano(),
