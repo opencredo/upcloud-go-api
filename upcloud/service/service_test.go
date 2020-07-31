@@ -547,8 +547,8 @@ func TestCreateBackup(t *testing.T) {
 
 	assert.Greaterf(
 		t,
-		backupStorageDetails.Created.Unix(),
-		timeBeforeBackup.Unix(),
+		backupStorageDetails.Created.UnixNano(),
+		timeBeforeBackup.UnixNano(),
 		"The creation timestamp of backup storage UUID %s is too early: %v (should be after %v)",
 		backupDetails.UUID,
 		backupStorageDetails.Created,
@@ -557,8 +557,8 @@ func TestCreateBackup(t *testing.T) {
 
 	assert.Lessf(
 		t,
-		backupStorageDetails.Created.Unix(),
-		timeAfterBackup.Unix(),
+		backupStorageDetails.Created.UnixNano(),
+		timeAfterBackup.UnixNano(),
 		"The creation timestamp of backup storage UUID %s is too late: %v (should be before %v)",
 		backupDetails.UUID,
 		backupStorageDetails.Created,
