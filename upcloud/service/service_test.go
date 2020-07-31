@@ -1,9 +1,11 @@
 package service
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"reflect"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -11,6 +13,8 @@ import (
 	"github.com/UpCloudLtd/upcloud-go-api/upcloud"
 	"github.com/UpCloudLtd/upcloud-go-api/upcloud/client"
 	"github.com/UpCloudLtd/upcloud-go-api/upcloud/request"
+	"github.com/dnaeon/go-vcr/cassette"
+	"github.com/dnaeon/go-vcr/recorder"
 	"github.com/hashicorp/go-cleanhttp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -34,10 +38,35 @@ func TestMain(m *testing.M) {
 func getService() *Service {
 	user, password := getCredentials()
 
-	c := client.NewWithHTTPClient(user, password, cleanhttp.DefaultClient())
+	c := client.New(user, password)
 	c.SetTimeout(time.Second * 300)
 
 	return New(c)
+}
+
+func record(t *testing.T, fixture string, f func(*testing.T, *Service)) {
+	r, err := recorder.New("fixtures/" + fixture)
+	require.NoError(t, err)
+
+	r.AddFilter(func(i *cassette.Interaction) error {
+		delete(i.Request.Headers, "Authorization")
+		return nil
+	})
+
+	defer func() {
+		err := r.Stop()
+		require.NoError(t, err)
+	}()
+
+	user, password := getCredentials()
+
+	httpClient := cleanhttp.DefaultClient()
+	httpClient.Transport = r
+
+	c := client.NewWithHTTPClient(user, password, httpClient)
+	c.SetTimeout(time.Second * 300)
+
+	f(t, New(c))
 }
 
 // Tears down the test environment by removing all resources
@@ -99,33 +128,34 @@ func teardown() {
 
 // TestGetAccount tests that the GetAccount() method returns proper data
 func TestGetAccount(t *testing.T) {
-	svc := getService()
+	record(t, "getaccount", func(t *testing.T, svc *Service) {
 
-	account, err := svc.GetAccount()
-	username, _ := getCredentials()
-	require.NoError(t, err)
+		account, err := svc.GetAccount()
+		username, _ := getCredentials()
+		require.NoError(t, err)
 
-	if account.UserName != username {
-		t.Errorf("TestGetAccount expected %s, got %s", username, account.UserName)
-	}
+		if account.UserName != username {
+			t.Errorf("TestGetAccount expected %s, got %s", username, account.UserName)
+		}
+	})
 }
 
 // TestErrorHandling checks that the correct error type is returned from service methods
 func TestErrorHandling(t *testing.T) {
-	svc := getService()
+	record(t, "errorhandling", func(t *testing.T, svc *Service) {
+		// Perform a bogus request that will certainly fail
+		_, err := svc.StartServer(&request.StartServerRequest{
+			UUID: "invalid",
+		})
 
-	// Perform a bogus request that will certainly fail
-	_, err := svc.StartServer(&request.StartServerRequest{
-		UUID: "invalid",
+		// Check that the correct error type is returned
+		expectedErrorType := "*upcloud.Error"
+		actualErrorType := reflect.TypeOf(err).String()
+
+		if actualErrorType != expectedErrorType {
+			t.Errorf("TestErrorHandling expected %s, got %s", expectedErrorType, actualErrorType)
+		}
 	})
-
-	// Check that the correct error type is returned
-	expectedErrorType := "*upcloud.Error"
-	actualErrorType := reflect.TypeOf(err).String()
-
-	if actualErrorType != expectedErrorType {
-		t.Errorf("TestErrorHandling expected %s, got %s", expectedErrorType, actualErrorType)
-	}
 }
 
 // TestCreateModifyDeleteServer performs the following actions:
@@ -135,78 +165,78 @@ func TestErrorHandling(t *testing.T) {
 // - stops the server
 // - deletes the server
 func TestCreateModifyDeleteServer(t *testing.T) {
-	svc := getService()
-
 	if testing.Short() {
 		t.Skip("Skipping test in short mode")
 	}
 	t.Parallel()
 
-	// Create a server
-	serverDetails, err := createServer(svc, "TestCreateModifyDeleteServer")
-	require.NoError(t, err)
-	t.Logf("Server %s with UUID %s created", serverDetails.Title, serverDetails.UUID)
+	record(t, "createmodifydeleteserver", func(t *testing.T, svc *Service) {
+		// Create a server
+		serverDetails, err := createServer(svc, "TestCreateModifyDeleteServer")
+		require.NoError(t, err)
+		t.Logf("Server %s with UUID %s created", serverDetails.Title, serverDetails.UUID)
 
-	// Get details about the storage (UUID is required for testing)
-	if len(serverDetails.StorageDevices) == 0 {
-		t.Errorf("Server %s with UUID %s has no storages attached", serverDetails.Title, serverDetails.UUID)
-	}
-
-	firstStorage := serverDetails.StorageDevices[0]
-	storageUUID := firstStorage.UUID
-
-	t.Logf("First storage of server with UUID %s has UUID %s", serverDetails.UUID, storageUUID)
-
-	// Modify the server
-	t.Log("Modifying the server ...")
-
-	newTitle := "Modified server"
-	_, err = svc.ModifyServer(&request.ModifyServerRequest{
-		UUID:  serverDetails.UUID,
-		Title: newTitle,
-	})
-
-	require.NoError(t, err)
-	t.Log("Waiting for the server to exit maintenance state ...")
-
-	serverDetails, err = svc.WaitForServerState(&request.WaitForServerStateRequest{
-		UUID:         serverDetails.UUID,
-		DesiredState: upcloud.ServerStateStarted,
-		Timeout:      time.Minute * 15,
-	})
-
-	require.NoError(t, err)
-	assert.Equal(t, newTitle, serverDetails.Title)
-	t.Logf("Server is now modified, new title is %s", serverDetails.Title)
-
-	// Stop the server
-	t.Logf("Stopping server with UUID %s ...", serverDetails.UUID)
-	err = stopServer(svc, serverDetails.UUID)
-	require.NoError(t, err)
-	t.Log("Server is now stopped")
-
-	// Delete the server
-	t.Logf("Deleting the server with UUID %s...", serverDetails.UUID)
-	err = deleteServer(svc, serverDetails.UUID)
-	require.NoError(t, err)
-	t.Log("Server is now deleted")
-
-	// Check if the storage still exists
-	storages, err := svc.GetStorages(&request.GetStoragesRequest{
-		Access: upcloud.StorageAccessPrivate,
-	})
-	require.NoError(t, err)
-
-	found := false
-	for _, storage := range storages.Storages {
-		if storage.UUID == storageUUID {
-			found = true
-			break
+		// Get details about the storage (UUID is required for testing)
+		if len(serverDetails.StorageDevices) == 0 {
+			t.Errorf("Server %s with UUID %s has no storages attached", serverDetails.Title, serverDetails.UUID)
 		}
-	}
-	assert.Truef(t, found, "Storage with UUID %s not found. It should still exist after deleting server with UUID %s", storageUUID, serverDetails.UUID)
 
-	t.Log("Storage still exists")
+		firstStorage := serverDetails.StorageDevices[0]
+		storageUUID := firstStorage.UUID
+
+		t.Logf("First storage of server with UUID %s has UUID %s", serverDetails.UUID, storageUUID)
+
+		// Modify the server
+		t.Log("Modifying the server ...")
+
+		newTitle := "Modified server"
+		_, err = svc.ModifyServer(&request.ModifyServerRequest{
+			UUID:  serverDetails.UUID,
+			Title: newTitle,
+		})
+
+		require.NoError(t, err)
+		t.Log("Waiting for the server to exit maintenance state ...")
+
+		serverDetails, err = svc.WaitForServerState(&request.WaitForServerStateRequest{
+			UUID:         serverDetails.UUID,
+			DesiredState: upcloud.ServerStateStarted,
+			Timeout:      time.Minute * 15,
+		})
+
+		require.NoError(t, err)
+		assert.Equal(t, newTitle, serverDetails.Title)
+		t.Logf("Server is now modified, new title is %s", serverDetails.Title)
+
+		// Stop the server
+		t.Logf("Stopping server with UUID %s ...", serverDetails.UUID)
+		err = stopServer(svc, serverDetails.UUID)
+		require.NoError(t, err)
+		t.Log("Server is now stopped")
+
+		// Delete the server
+		t.Logf("Deleting the server with UUID %s...", serverDetails.UUID)
+		err = deleteServer(svc, serverDetails.UUID)
+		require.NoError(t, err)
+		t.Log("Server is now deleted")
+
+		// Check if the storage still exists
+		storages, err := svc.GetStorages(&request.GetStoragesRequest{
+			Access: upcloud.StorageAccessPrivate,
+		})
+		require.NoError(t, err)
+
+		found := false
+		for _, storage := range storages.Storages {
+			if storage.UUID == storageUUID {
+				found = true
+				break
+			}
+		}
+		assert.Truef(t, found, "Storage with UUID %s not found. It should still exist after deleting server with UUID %s", storageUUID, serverDetails.UUID)
+
+		t.Log("Storage still exists")
+	})
 }
 
 // TestCreateDeleteServerAndStorage performs the following actions:
@@ -214,53 +244,53 @@ func TestCreateModifyDeleteServer(t *testing.T) {
 // - creates a server
 // - deletes the server including storage
 func TestCreateDeleteServerAndStorage(t *testing.T) {
-	svc := getService()
-
 	if testing.Short() {
 		t.Skip("Skipping test in short mode")
 	}
 	t.Parallel()
 
-	// Create a server
-	serverDetails, err := createServer(svc, "TestCreateDeleteServerAndStorage")
-	require.NoError(t, err)
-	t.Logf("Server %s with UUID %s created", serverDetails.Title, serverDetails.UUID)
+	record(t, "createdeleteserverandstorage", func(t *testing.T, svc *Service) {
+		// Create a server
+		serverDetails, err := createServer(svc, "TestCreateDeleteServerAndStorage")
+		require.NoError(t, err)
+		t.Logf("Server %s with UUID %s created", serverDetails.Title, serverDetails.UUID)
 
-	// Get details about the storage (UUID is required for testing)
-	assert.NotEmptyf(t, serverDetails.StorageDevices, "Server %s with UUID %s has no storages attached", serverDetails.Title, serverDetails.UUID)
+		// Get details about the storage (UUID is required for testing)
+		assert.NotEmptyf(t, serverDetails.StorageDevices, "Server %s with UUID %s has no storages attached", serverDetails.Title, serverDetails.UUID)
 
-	firstStorage := serverDetails.StorageDevices[0]
-	storageUUID := firstStorage.UUID
-	t.Logf("First storage of server with UUID %s has UUID %s", serverDetails.UUID, storageUUID)
+		firstStorage := serverDetails.StorageDevices[0]
+		storageUUID := firstStorage.UUID
+		t.Logf("First storage of server with UUID %s has UUID %s", serverDetails.UUID, storageUUID)
 
-	// Stop the server
-	t.Logf("Stopping server with UUID %s ...", serverDetails.UUID)
-	err = stopServer(svc, serverDetails.UUID)
-	require.NoError(t, err)
-	t.Log("Server is now stopped")
+		// Stop the server
+		t.Logf("Stopping server with UUID %s ...", serverDetails.UUID)
+		err = stopServer(svc, serverDetails.UUID)
+		require.NoError(t, err)
+		t.Log("Server is now stopped")
 
-	// Delete the server and storage
-	t.Logf("Deleting the server with UUID %s, including storages...", serverDetails.UUID)
-	err = deleteServerAndStorages(svc, serverDetails.UUID)
-	require.NoError(t, err)
-	t.Log("Server is now deleted")
+		// Delete the server and storage
+		t.Logf("Deleting the server with UUID %s, including storages...", serverDetails.UUID)
+		err = deleteServerAndStorages(svc, serverDetails.UUID)
+		require.NoError(t, err)
+		t.Log("Server is now deleted")
 
-	// Check if the storage was deleted
-	storages, err := svc.GetStorages(&request.GetStoragesRequest{
-		Access: upcloud.StorageAccessPrivate,
-	})
-	require.NoError(t, err)
+		// Check if the storage was deleted
+		storages, err := svc.GetStorages(&request.GetStoragesRequest{
+			Access: upcloud.StorageAccessPrivate,
+		})
+		require.NoError(t, err)
 
-	found := false
-	for _, storage := range storages.Storages {
-		if storage.UUID == storageUUID {
-			found = true
-			break
+		found := false
+		for _, storage := range storages.Storages {
+			if storage.UUID == storageUUID {
+				found = true
+				break
+			}
 		}
-	}
-	assert.Falsef(t, found, "Storage with UUID %s still exists. It should have been deleted with server with UUID %s", storageUUID, serverDetails.UUID)
+		assert.Falsef(t, found, "Storage with UUID %s still exists. It should have been deleted with server with UUID %s", storageUUID, serverDetails.UUID)
 
-	t.Log("Storage was deleted, too")
+		t.Log("Storage was deleted, too")
+	})
 }
 
 // TestCreateModifyDeleteStorage performs the following actions:
@@ -269,35 +299,35 @@ func TestCreateDeleteServerAndStorage(t *testing.T) {
 // - modifies the storage
 // - deletes the storage
 func TestCreateModifyDeleteStorage(t *testing.T) {
-	svc := getService()
-
 	if testing.Short() {
 		t.Skip("Skipping test in short mode")
 	}
 	t.Parallel()
 
-	// Create some storage
-	storageDetails, err := createStorage(svc)
-	require.NoError(t, err)
-	t.Logf("Storage %s with UUID %s created", storageDetails.Title, storageDetails.UUID)
+	record(t, "createmodifydeletestorage", func(t *testing.T, svc *Service) {
+		// Create some storage
+		storageDetails, err := createStorage(svc)
+		require.NoError(t, err)
+		t.Logf("Storage %s with UUID %s created", storageDetails.Title, storageDetails.UUID)
 
-	// Modify the storage
-	t.Log("Modifying the storage ...")
+		// Modify the storage
+		t.Log("Modifying the storage ...")
 
-	newTitle := "New fancy title"
-	storageDetails, err = svc.ModifyStorage(&request.ModifyStorageRequest{
-		UUID:  storageDetails.UUID,
-		Title: newTitle,
+		newTitle := "New fancy title"
+		storageDetails, err = svc.ModifyStorage(&request.ModifyStorageRequest{
+			UUID:  storageDetails.UUID,
+			Title: newTitle,
+		})
+		require.NoError(t, err)
+		assert.Equal(t, newTitle, storageDetails.Title)
+		t.Logf("Storage with UUID %s modified successfully, new title is %s", storageDetails.UUID, storageDetails.Title)
+
+		// Delete the storage
+		t.Log("Deleting the storage ...")
+		err = deleteStorage(svc, storageDetails.UUID)
+		require.NoError(t, err)
+		t.Log("Storage is now deleted")
 	})
-	require.NoError(t, err)
-	assert.Equal(t, newTitle, storageDetails.Title)
-	t.Logf("Storage with UUID %s modified successfully, new title is %s", storageDetails.UUID, storageDetails.Title)
-
-	// Delete the storage
-	t.Log("Deleting the storage ...")
-	err = deleteStorage(svc, storageDetails.UUID)
-	require.NoError(t, err)
-	t.Log("Storage is now deleted")
 }
 
 // TestAttachDetachStorage performs the following actions:
@@ -310,50 +340,50 @@ func TestCreateModifyDeleteStorage(t *testing.T) {
 // - deletes the storage
 // - deletes the server
 func TestAttachDetachStorage(t *testing.T) {
-	svc := getService()
-
 	if testing.Short() {
 		t.Skip("Skipping test in short mode")
 	}
 	t.Parallel()
 
-	// Create a server
-	serverDetails, err := createServer(svc, "TestAttachDetachStorage")
-	require.NoError(t, err)
-	t.Logf("Server %s with UUID %s created", serverDetails.Title, serverDetails.UUID)
+	record(t, "attachdetachstorage", func(t *testing.T, svc *Service) {
+		// Create a server
+		serverDetails, err := createServer(svc, "TestAttachDetachStorage")
+		require.NoError(t, err)
+		t.Logf("Server %s with UUID %s created", serverDetails.Title, serverDetails.UUID)
 
-	// Stop the server
-	t.Logf("Stopping server with UUID %s ...", serverDetails.UUID)
-	err = stopServer(svc, serverDetails.UUID)
-	require.NoError(t, err)
-	t.Log("Server is now stopped")
+		// Stop the server
+		t.Logf("Stopping server with UUID %s ...", serverDetails.UUID)
+		err = stopServer(svc, serverDetails.UUID)
+		require.NoError(t, err)
+		t.Log("Server is now stopped")
 
-	// Create some storage
-	storageDetails, err := createStorage(svc)
-	require.NoError(t, err)
-	t.Logf("Storage %s with UUID %s created", storageDetails.Title, storageDetails.UUID)
+		// Create some storage
+		storageDetails, err := createStorage(svc)
+		require.NoError(t, err)
+		t.Logf("Storage %s with UUID %s created", storageDetails.Title, storageDetails.UUID)
 
-	// Attach the storage
-	t.Logf("Attaching storage %s", storageDetails.UUID)
+		// Attach the storage
+		t.Logf("Attaching storage %s", storageDetails.UUID)
 
-	serverDetails, err = svc.AttachStorage(&request.AttachStorageRequest{
-		StorageUUID: storageDetails.UUID,
-		ServerUUID:  serverDetails.UUID,
-		Type:        upcloud.StorageTypeDisk,
-		Address:     "scsi:0:0",
+		serverDetails, err = svc.AttachStorage(&request.AttachStorageRequest{
+			StorageUUID: storageDetails.UUID,
+			ServerUUID:  serverDetails.UUID,
+			Type:        upcloud.StorageTypeDisk,
+			Address:     "scsi:0:0",
+		})
+		require.NoError(t, err)
+		t.Logf("Storage attached to server with UUID %s", serverDetails.UUID)
+
+		// Detach the storage
+		t.Logf("Detaching storage %s", storageDetails.UUID)
+
+		_, err = svc.DetachStorage(&request.DetachStorageRequest{
+			ServerUUID: serverDetails.UUID,
+			Address:    "scsi:0:0",
+		})
+		require.NoError(t, err)
+		t.Logf("Storage %s detached", storageDetails.UUID)
 	})
-	require.NoError(t, err)
-	t.Logf("Storage attached to server with UUID %s", serverDetails.UUID)
-
-	// Detach the storage
-	t.Logf("Detaching storage %s", storageDetails.UUID)
-
-	_, err = svc.DetachStorage(&request.DetachStorageRequest{
-		ServerUUID: serverDetails.UUID,
-		Address:    "scsi:0:0",
-	})
-	require.NoError(t, err)
-	t.Logf("Storage %s detached", storageDetails.UUID)
 }
 
 // TestCloneStorage performs the following actions:
@@ -362,31 +392,31 @@ func TestAttachDetachStorage(t *testing.T) {
 // - clones the storage device
 // - deletes the clone and the storage device
 func TestCloneStorage(t *testing.T) {
-	svc := getService()
-
 	if testing.Short() {
 		t.Skip("Skipping test in short mode")
 	}
 	t.Parallel()
 
-	// Create storage
-	storageDetails, err := createStorage(svc)
-	require.NoError(t, err)
-	t.Logf("Storage %s with UUID %s created", storageDetails.Title, storageDetails.UUID)
+	record(t, "clonestorage", func(t *testing.T, svc *Service) {
+		// Create storage
+		storageDetails, err := createStorage(svc)
+		require.NoError(t, err)
+		t.Logf("Storage %s with UUID %s created", storageDetails.Title, storageDetails.UUID)
 
-	// Clone the storage
-	t.Log("Cloning storage ...")
+		// Clone the storage
+		t.Log("Cloning storage ...")
 
-	clonedStorageDetails, err := svc.CloneStorage(&request.CloneStorageRequest{
-		UUID:  storageDetails.UUID,
-		Title: "Cloned storage",
-		Zone:  "fi-hel2",
-		Tier:  upcloud.StorageTierMaxIOPS,
+		clonedStorageDetails, err := svc.CloneStorage(&request.CloneStorageRequest{
+			UUID:  storageDetails.UUID,
+			Title: "Cloned storage",
+			Zone:  "fi-hel2",
+			Tier:  upcloud.StorageTierMaxIOPS,
+		})
+		require.NoError(t, err)
+		err = waitForStorageOnline(svc, clonedStorageDetails.UUID)
+		require.NoError(t, err)
+		t.Logf("Storage cloned as %s", clonedStorageDetails.UUID)
 	})
-	require.NoError(t, err)
-	err = waitForStorageOnline(svc, clonedStorageDetails.UUID)
-	require.NoError(t, err)
-	t.Logf("Storage cloned as %s", clonedStorageDetails.UUID)
 }
 
 // TestTemplatizeServerStorage performs the following actions:
@@ -396,43 +426,43 @@ func TestCloneStorage(t *testing.T) {
 // - deletes the new storage
 // - stops and deletes the server
 func TestTemplatizeServerStorage(t *testing.T) {
-	svc := getService()
-
 	if testing.Short() {
 		t.Skip("Skipping test in short mode")
 	}
 	t.Parallel()
 
-	// Create server
-	serverDetails, err := createServer(svc, "TestTemplatizeServerStorage")
-	require.NoError(t, err)
-	t.Logf("Server %s with UUID %s created", serverDetails.Title, serverDetails.UUID)
+	record(t, "templatizeserverstorage", func(t *testing.T, svc *Service) {
+		// Create server
+		serverDetails, err := createServer(svc, "TestTemplatizeServerStorage")
+		require.NoError(t, err)
+		t.Logf("Server %s with UUID %s created", serverDetails.Title, serverDetails.UUID)
 
-	// Stop the server
-	t.Logf("Stopping server with UUID %s ...", serverDetails.UUID)
-	err = stopServer(svc, serverDetails.UUID)
-	require.NoError(t, err)
-	t.Log("Server is now stopped")
+		// Stop the server
+		t.Logf("Stopping server with UUID %s ...", serverDetails.UUID)
+		err = stopServer(svc, serverDetails.UUID)
+		require.NoError(t, err)
+		t.Log("Server is now stopped")
 
-	// Get extended service details
-	serverDetails, err = svc.GetServerDetails(&request.GetServerDetailsRequest{
-		UUID: serverDetails.UUID,
+		// Get extended service details
+		serverDetails, err = svc.GetServerDetails(&request.GetServerDetailsRequest{
+			UUID: serverDetails.UUID,
+		})
+		require.NoError(t, err)
+
+		// Templatize the server's first storage device
+		require.NotEmpty(t, serverDetails.StorageDevices)
+		t.Log("Templatizing storage ...")
+
+		storageDetails, err := svc.TemplatizeStorage(&request.TemplatizeStorageRequest{
+			UUID:  serverDetails.StorageDevices[0].UUID,
+			Title: "Templatized storage",
+		})
+		require.NoError(t, err)
+
+		err = waitForStorageOnline(svc, storageDetails.UUID)
+		require.NoError(t, err)
+		t.Logf("Storage templatized as %s", storageDetails.UUID)
 	})
-	require.NoError(t, err)
-
-	// Templatize the server's first storage device
-	require.NotEmpty(t, serverDetails.StorageDevices)
-	t.Log("Templatizing storage ...")
-
-	storageDetails, err := svc.TemplatizeStorage(&request.TemplatizeStorageRequest{
-		UUID:  serverDetails.StorageDevices[0].UUID,
-		Title: "Templatized storage",
-	})
-	require.NoError(t, err)
-
-	err = waitForStorageOnline(svc, storageDetails.UUID)
-	require.NoError(t, err)
-	t.Logf("Storage templatized as %s", storageDetails.UUID)
 }
 
 // TestLoadEjectCDROM performs the following actions:
@@ -443,49 +473,49 @@ func TestTemplatizeServerStorage(t *testing.T) {
 // - loads a CD-ROM
 // - ejects the CD-ROM
 func TestLoadEjectCDROM(t *testing.T) {
-	svc := getService()
-
 	if testing.Short() {
 		t.Skip("Skipping test in short mode")
 	}
 	t.Parallel()
 
-	// Create the server
-	serverDetails, err := createServer(svc, "TestLoadEjectCDROM")
-	require.NoError(t, err)
-	t.Logf("Server %s with UUID %s created", serverDetails.Title, serverDetails.UUID)
+	record(t, "loadejectcdrom", func(t *testing.T, svc *Service) {
+		// Create the server
+		serverDetails, err := createServer(svc, "TestLoadEjectCDROM")
+		require.NoError(t, err)
+		t.Logf("Server %s with UUID %s created", serverDetails.Title, serverDetails.UUID)
 
-	// Stop the server
-	t.Logf("Stopping server with UUID %s ...", serverDetails.UUID)
-	err = stopServer(svc, serverDetails.UUID)
-	require.NoError(t, err)
-	t.Log("Server is now stopped")
+		// Stop the server
+		t.Logf("Stopping server with UUID %s ...", serverDetails.UUID)
+		err = stopServer(svc, serverDetails.UUID)
+		require.NoError(t, err)
+		t.Log("Server is now stopped")
 
-	// Attach CD-ROM device
-	t.Logf("Attaching CD-ROM device to server with UUID %s", serverDetails.UUID)
-	_, err = svc.AttachStorage(&request.AttachStorageRequest{
-		ServerUUID: serverDetails.UUID,
-		Type:       upcloud.StorageTypeCDROM,
+		// Attach CD-ROM device
+		t.Logf("Attaching CD-ROM device to server with UUID %s", serverDetails.UUID)
+		_, err = svc.AttachStorage(&request.AttachStorageRequest{
+			ServerUUID: serverDetails.UUID,
+			Type:       upcloud.StorageTypeCDROM,
+		})
+		require.NoError(t, err)
+		t.Log("CD-ROM is now attached")
+
+		// Load the CD-ROM
+		t.Log("Loading CD-ROM into CD-ROM device")
+		_, err = svc.LoadCDROM(&request.LoadCDROMRequest{
+			ServerUUID:  serverDetails.UUID,
+			StorageUUID: "01000000-0000-4000-8000-000030060101",
+		})
+		require.NoError(t, err)
+		t.Log("CD-ROM is now loaded")
+
+		// Eject the CD-ROM
+		t.Log("Ejecting CD-ROM from CD-ROM device")
+		_, err = svc.EjectCDROM(&request.EjectCDROMRequest{
+			ServerUUID: serverDetails.UUID,
+		})
+		require.NoError(t, err)
+		t.Log("CD-ROM is now ejected")
 	})
-	require.NoError(t, err)
-	t.Log("CD-ROM is now attached")
-
-	// Load the CD-ROM
-	t.Log("Loading CD-ROM into CD-ROM device")
-	_, err = svc.LoadCDROM(&request.LoadCDROMRequest{
-		ServerUUID:  serverDetails.UUID,
-		StorageUUID: "01000000-0000-4000-8000-000030060101",
-	})
-	require.NoError(t, err)
-	t.Log("CD-ROM is now loaded")
-
-	// Eject the CD-ROM
-	t.Log("Ejecting CD-ROM from CD-ROM device")
-	_, err = svc.EjectCDROM(&request.EjectCDROMRequest{
-		ServerUUID: serverDetails.UUID,
-	})
-	require.NoError(t, err)
-	t.Log("CD-ROM is now ejected")
 }
 
 // TestCreateRestoreBackup performs the following actions:
@@ -496,77 +526,86 @@ func TestLoadEjectCDROM(t *testing.T) {
 //
 // It's not feasible to test backup restoration due to time constraints
 func TestCreateBackup(t *testing.T) {
-	svc := getService()
-
 	if testing.Short() {
 		t.Skip("Skipping test in short mode")
 	}
 	t.Parallel()
 
-	// Create the storage
-	storageDetails, err := createStorage(svc)
-	require.NoError(t, err)
-	t.Logf("Storage %s with UUID %s created", storageDetails.Title, storageDetails.UUID)
+	record(t, "createbackup", func(t *testing.T, svc *Service) {
+		// Create the storage
+		storageDetails, err := createStorage(svc)
+		require.NoError(t, err)
+		t.Logf("Storage %s with UUID %s created", storageDetails.Title, storageDetails.UUID)
 
-	// Create a backup
-	t.Logf("Creating backup of storage with UUID %s ...", storageDetails.UUID)
+		// Create a backup
+		t.Logf("Creating backup of storage with UUID %s ...", storageDetails.UUID)
 
-	timeBeforeBackup, err := utcTimeWithSecondPrecision()
-	require.NoError(t, err)
+		timeBeforeBackup, err := utcTimeWithSecondPrecision()
+		require.NoError(t, err)
 
-	backupDetails, err := svc.CreateBackup(&request.CreateBackupRequest{
-		UUID:  storageDetails.UUID,
-		Title: "Backup",
+		// Because we are recording the API tests we need to store the 'before'
+		// time for the later check. We're storing it in the Title field.
+		backupDetails, err := svc.CreateBackup(&request.CreateBackupRequest{
+			UUID:  storageDetails.UUID,
+			Title: fmt.Sprintf("backup-%d", timeBeforeBackup.UnixNano()),
+		})
+		require.NoError(t, err)
+
+		err = waitForStorageOnline(svc, storageDetails.UUID)
+		require.NoError(t, err)
+
+		timeAfterBackup, err := utcTimeWithSecondPrecision()
+		require.NoError(t, err)
+
+		t.Logf("Created backup with UUID %s", backupDetails.UUID)
+
+		// Get backup storage details
+		t.Logf("Getting details of backup storage with UUID %s ...", backupDetails.UUID)
+
+		backupStorageDetails, err := svc.GetStorageDetails(&request.GetStorageDetailsRequest{
+			UUID: backupDetails.UUID,
+		})
+		require.NoError(t, err)
+
+		assert.Equalf(
+			t,
+			backupStorageDetails.Origin,
+			storageDetails.UUID,
+			"The origin UUID %s of backup storage UUID %s does not match the actual origin UUID %s",
+			backupStorageDetails.Origin,
+			backupDetails.UUID,
+			storageDetails.UUID,
+		)
+
+		// Retrieve the time we stored in the title field.
+		titleSplit := strings.Split(backupStorageDetails.Title, "-")
+		require.Len(t, titleSplit, 2)
+		timeBeforeBackupNano, err := strconv.ParseInt(titleSplit[1], 0, 64)
+		require.NoError(t, err)
+
+		assert.GreaterOrEqualf(
+			t,
+			backupStorageDetails.Created.UnixNano(),
+			timeBeforeBackupNano,
+			"The creation timestamp of backup storage UUID %s is too early: %v (should be after %v)",
+			backupDetails.UUID,
+			backupStorageDetails.Created,
+			timeBeforeBackup,
+		)
+
+		// This test becomes less useful the older the fixtures are.
+		assert.LessOrEqualf(
+			t,
+			backupStorageDetails.Created.UnixNano(),
+			timeAfterBackup.UnixNano(),
+			"The creation timestamp of backup storage UUID %s is too late: %v (should be before %v)",
+			backupDetails.UUID,
+			backupStorageDetails.Created,
+			timeAfterBackup,
+		)
+
+		t.Logf("Backup storage origin UUID OK")
 	})
-	require.NoError(t, err)
-
-	err = waitForStorageOnline(svc, storageDetails.UUID)
-	require.NoError(t, err)
-
-	timeAfterBackup, err := utcTimeWithSecondPrecision()
-	require.NoError(t, err)
-
-	t.Logf("Created backup with UUID %s", backupDetails.UUID)
-
-	// Get backup storage details
-	t.Logf("Getting details of backup storage with UUID %s ...", backupDetails.UUID)
-
-	backupStorageDetails, err := svc.GetStorageDetails(&request.GetStorageDetailsRequest{
-		UUID: backupDetails.UUID,
-	})
-	require.NoError(t, err)
-
-	assert.Equalf(
-		t,
-		backupStorageDetails.Origin,
-		storageDetails.UUID,
-		"The origin UUID %s of backup storage UUID %s does not match the actual origin UUID %s",
-		backupStorageDetails.Origin,
-		backupDetails.UUID,
-		storageDetails.UUID,
-	)
-
-	assert.GreaterOrEqualf(
-		t,
-		backupStorageDetails.Created.UnixNano(),
-		timeBeforeBackup.UnixNano(),
-		"The creation timestamp of backup storage UUID %s is too early: %v (should be after %v)",
-		backupDetails.UUID,
-		backupStorageDetails.Created,
-		timeBeforeBackup,
-	)
-
-	assert.LessOrEqualf(
-		t,
-		backupStorageDetails.Created.UnixNano(),
-		timeAfterBackup.UnixNano(),
-		"The creation timestamp of backup storage UUID %s is too late: %v (should be before %v)",
-		backupDetails.UUID,
-		backupStorageDetails.Created,
-		timeAfterBackup,
-	)
-
-	t.Logf("Backup storage origin UUID OK")
 }
 
 // TestAttachModifyReleaseIPAddress performs the following actions
@@ -576,50 +615,50 @@ func TestCreateBackup(t *testing.T) {
 // - modifies the PTR record of the IP address
 // - deletes the IP address
 func TestAttachModifyReleaseIPAddress(t *testing.T) {
-	svc := getService()
-
 	if testing.Short() {
 		t.Skip("Skipping test in short mode")
 	}
 	t.Parallel()
 
-	// Create the server
-	serverDetails, err := createServer(svc, "TestAttachModifyReleaseIPAddress")
-	require.NoError(t, err)
-	t.Logf("Server %s with UUID %s created", serverDetails.Title, serverDetails.UUID)
+	record(t, "attachmodifyreleaseipaddress", func(t *testing.T, svc *Service) {
+		// Create the server
+		serverDetails, err := createServer(svc, "TestAttachModifyReleaseIPAddress")
+		require.NoError(t, err)
+		t.Logf("Server %s with UUID %s created", serverDetails.Title, serverDetails.UUID)
 
-	// Stop the server
-	t.Logf("Stopping server with UUID %s ...", serverDetails.UUID)
-	err = stopServer(svc, serverDetails.UUID)
-	require.NoError(t, err)
-	t.Log("Server is now stopped")
+		// Stop the server
+		t.Logf("Stopping server with UUID %s ...", serverDetails.UUID)
+		err = stopServer(svc, serverDetails.UUID)
+		require.NoError(t, err)
+		t.Log("Server is now stopped")
 
-	// Assign an IP address
-	t.Log("Assigning IP address to server ...")
-	ipAddress, err := svc.AssignIPAddress(&request.AssignIPAddressRequest{
-		Access:     upcloud.IPAddressAccessPublic,
-		Family:     upcloud.IPAddressFamilyIPv6,
-		ServerUUID: serverDetails.UUID,
+		// Assign an IP address
+		t.Log("Assigning IP address to server ...")
+		ipAddress, err := svc.AssignIPAddress(&request.AssignIPAddressRequest{
+			Access:     upcloud.IPAddressAccessPublic,
+			Family:     upcloud.IPAddressFamilyIPv6,
+			ServerUUID: serverDetails.UUID,
+		})
+		require.NoError(t, err)
+		t.Logf("Assigned IP address %s to server with UUID %s", ipAddress.Address, serverDetails.UUID)
+
+		// Modify the PTR record
+		t.Logf("Modifying PTR record for address %s ...", ipAddress.Address)
+		ipAddress, err = svc.ModifyIPAddress(&request.ModifyIPAddressRequest{
+			IPAddress: ipAddress.Address,
+			PTRRecord: "such.pointer.example.com",
+		})
+		require.NoError(t, err)
+		t.Logf("PTR record modified, new record is %s", ipAddress.PTRRecord)
+
+		// Release the IP address
+		t.Log("Releasing the IP address ...")
+		err = svc.ReleaseIPAddress(&request.ReleaseIPAddressRequest{
+			IPAddress: ipAddress.Address,
+		})
+		require.NoError(t, err)
+		t.Log("The IP address is now released")
 	})
-	require.NoError(t, err)
-	t.Logf("Assigned IP address %s to server with UUID %s", ipAddress.Address, serverDetails.UUID)
-
-	// Modify the PTR record
-	t.Logf("Modifying PTR record for address %s ...", ipAddress.Address)
-	ipAddress, err = svc.ModifyIPAddress(&request.ModifyIPAddressRequest{
-		IPAddress: ipAddress.Address,
-		PTRRecord: "such.pointer.example.com",
-	})
-	require.NoError(t, err)
-	t.Logf("PTR record modified, new record is %s", ipAddress.PTRRecord)
-
-	// Release the IP address
-	t.Log("Releasing the IP address ...")
-	err = svc.ReleaseIPAddress(&request.ReleaseIPAddressRequest{
-		IPAddress: ipAddress.Address,
-	})
-	require.NoError(t, err)
-	t.Log("The IP address is now released")
 }
 
 // TestFirewallRules performs the following actions:
@@ -630,51 +669,51 @@ func TestAttachModifyReleaseIPAddress(t *testing.T) {
 // - deletes the firewall rule
 //
 func TestFirewallRules(t *testing.T) {
-	svc := getService()
-
 	if testing.Short() {
 		t.Skip("Skipping test in short mode")
 	}
 	t.Parallel()
 
-	// Create the server
-	serverDetails, err := createServer(svc, "TestFirewallRules")
-	require.NoError(t, err)
-	t.Logf("Server %s with UUID %s created", serverDetails.Title, serverDetails.UUID)
+	record(t, "firewallrules", func(t *testing.T, svc *Service) {
+		// Create the server
+		serverDetails, err := createServer(svc, "TestFirewallRules")
+		require.NoError(t, err)
+		t.Logf("Server %s with UUID %s created", serverDetails.Title, serverDetails.UUID)
 
-	// Create firewall rule
-	t.Logf("Creating firewall rule #1 for server with UUID %s ...", serverDetails.UUID)
-	_, err = svc.CreateFirewallRule(&request.CreateFirewallRuleRequest{
-		ServerUUID: serverDetails.UUID,
-		FirewallRule: upcloud.FirewallRule{
-			Direction: upcloud.FirewallRuleDirectionIn,
-			Action:    upcloud.FirewallRuleActionAccept,
-			Family:    upcloud.IPAddressFamilyIPv4,
-			Protocol:  upcloud.FirewallRuleProtocolTCP,
-			Position:  1,
-			Comment:   "This is the comment",
-		},
-	})
-	require.NoError(t, err)
-	t.Log("Firewall rule created")
+		// Create firewall rule
+		t.Logf("Creating firewall rule #1 for server with UUID %s ...", serverDetails.UUID)
+		_, err = svc.CreateFirewallRule(&request.CreateFirewallRuleRequest{
+			ServerUUID: serverDetails.UUID,
+			FirewallRule: upcloud.FirewallRule{
+				Direction: upcloud.FirewallRuleDirectionIn,
+				Action:    upcloud.FirewallRuleActionAccept,
+				Family:    upcloud.IPAddressFamilyIPv4,
+				Protocol:  upcloud.FirewallRuleProtocolTCP,
+				Position:  1,
+				Comment:   "This is the comment",
+			},
+		})
+		require.NoError(t, err)
+		t.Log("Firewall rule created")
 
-	// Get details about the rule
-	t.Log("Getting details about firewall rule #1 ...")
-	firewallRule, err := svc.GetFirewallRuleDetails(&request.GetFirewallRuleDetailsRequest{
-		ServerUUID: serverDetails.UUID,
-		Position:   1,
-	})
-	require.NoError(t, err)
-	t.Logf("Got firewall rule details, comment is %s", firewallRule.Comment)
+		// Get details about the rule
+		t.Log("Getting details about firewall rule #1 ...")
+		firewallRule, err := svc.GetFirewallRuleDetails(&request.GetFirewallRuleDetailsRequest{
+			ServerUUID: serverDetails.UUID,
+			Position:   1,
+		})
+		require.NoError(t, err)
+		t.Logf("Got firewall rule details, comment is %s", firewallRule.Comment)
 
-	// Delete the firewall rule
-	t.Log("Deleting firewall rule #1 ...")
-	err = svc.DeleteFirewallRule(&request.DeleteFirewallRuleRequest{
-		ServerUUID: serverDetails.UUID,
-		Position:   1,
+		// Delete the firewall rule
+		t.Log("Deleting firewall rule #1 ...")
+		err = svc.DeleteFirewallRule(&request.DeleteFirewallRuleRequest{
+			ServerUUID: serverDetails.UUID,
+			Position:   1,
+		})
+		require.NoError(t, err)
+		t.Log("Firewall rule #1 deleted")
 	})
-	require.NoError(t, err)
-	t.Log("Firewall rule #1 deleted")
 }
 
 // TestTagging tests that all tagging-related functionality works correctly. It performs the following actions:
@@ -685,82 +724,82 @@ func TestFirewallRules(t *testing.T) {
 //   - deletes the third tag
 //   - untags the first tag from the server
 func TestTagging(t *testing.T) {
-	svc := getService()
-
 	if testing.Short() {
 		t.Skip("Skipping test in short mode")
 	}
 	t.Parallel()
 
-	// Create the server
-	serverDetails, err := createServer(svc, "TestTagging")
-	require.NoError(t, err)
-	t.Logf("Server %s with UUID %s created", serverDetails.Title, serverDetails.UUID)
+	record(t, "tagging", func(t *testing.T, svc *Service) {
+		// Create the server
+		serverDetails, err := createServer(svc, "TestTagging")
+		require.NoError(t, err)
+		t.Logf("Server %s with UUID %s created", serverDetails.Title, serverDetails.UUID)
 
-	// Remove all existing tags
-	t.Log("Deleting any existing tags ...")
-	err = deleteAllTags(svc)
-	require.NoError(t, err)
+		// Remove all existing tags
+		t.Log("Deleting any existing tags ...")
+		err = deleteAllTags(svc)
+		require.NoError(t, err)
 
-	// Create three tags
-	tags := []string{
-		"tag1",
-		"tag2",
-		"tag3",
-	}
+		// Create three tags
+		tags := []string{
+			"tag1",
+			"tag2",
+			"tag3",
+		}
 
-	for _, tag := range tags {
-		t.Logf("Creating tag %s", tag)
-		tagDetails, err := svc.CreateTag(&request.CreateTagRequest{
+		for _, tag := range tags {
+			t.Logf("Creating tag %s", tag)
+			tagDetails, err := svc.CreateTag(&request.CreateTagRequest{
+				Tag: upcloud.Tag{
+					Name: tag,
+				},
+			})
+
+			require.NoError(t, err)
+			t.Logf("Tag %s created", tagDetails.Name)
+		}
+
+		// Assign the first tag to the server
+		serverDetails, err = svc.TagServer(&request.TagServerRequest{
+			UUID: serverDetails.UUID,
+			Tags: []string{
+				"tag1",
+			},
+		})
+		require.NoError(t, err)
+		t.Logf("Server %s is now tagged with tag %s", serverDetails.Title, "tag1")
+
+		// Rename the second tag
+		tagDetails, err := svc.ModifyTag(&request.ModifyTagRequest{
+			Name: "tag2",
 			Tag: upcloud.Tag{
-				Name: tag,
+				Name: "tag2_renamed",
 			},
 		})
 
 		require.NoError(t, err)
-		t.Logf("Tag %s created", tagDetails.Name)
-	}
+		t.Logf("Tag tag2 renamed to %s", tagDetails.Name)
 
-	// Assign the first tag to the server
-	serverDetails, err = svc.TagServer(&request.TagServerRequest{
-		UUID: serverDetails.UUID,
-		Tags: []string{
-			"tag1",
-		},
+		// Delete the third tag
+		err = svc.DeleteTag(&request.DeleteTagRequest{
+			Name: "tag3",
+		})
+
+		require.NoError(t, err)
+		t.Log("Tag tag3 deleted")
+
+		// Untag the server
+		t.Logf("Removing tag %s from server %s", "tag1", serverDetails.UUID)
+		serverDetails, err = svc.UntagServer(&request.UntagServerRequest{
+			UUID: serverDetails.UUID,
+			Tags: []string{
+				"tag1",
+			},
+		})
+
+		require.NoError(t, err)
+		t.Logf("Server %s is now untagged", serverDetails.Title)
 	})
-	require.NoError(t, err)
-	t.Logf("Server %s is now tagged with tag %s", serverDetails.Title, "tag1")
-
-	// Rename the second tag
-	tagDetails, err := svc.ModifyTag(&request.ModifyTagRequest{
-		Name: "tag2",
-		Tag: upcloud.Tag{
-			Name: "tag2_renamed",
-		},
-	})
-
-	require.NoError(t, err)
-	t.Logf("Tag tag2 renamed to %s", tagDetails.Name)
-
-	// Delete the third tag
-	err = svc.DeleteTag(&request.DeleteTagRequest{
-		Name: "tag3",
-	})
-
-	require.NoError(t, err)
-	t.Log("Tag tag3 deleted")
-
-	// Untag the server
-	t.Logf("Removing tag %s from server %s", "tag1", serverDetails.UUID)
-	serverDetails, err = svc.UntagServer(&request.UntagServerRequest{
-		UUID: serverDetails.UUID,
-		Tags: []string{
-			"tag1",
-		},
-	})
-
-	require.NoError(t, err)
-	t.Logf("Server %s is now untagged", serverDetails.Title)
 }
 
 // Creates a server and returns the details about it, panic if creation fails
