@@ -15,7 +15,7 @@ interactions:
     body: |
       <?xml version="1.0" encoding="utf-8"?>
       <account>
-        <credits>2894.8216</credits>
+        <credits>995435.8356</credits>
         <resource_limits>
           <cores>100</cores>
           <detached_floating_ips></detached_floating_ips>
@@ -30,11 +30,11 @@ interactions:
       </account>
     headers:
       Content-Length:
-      - "438"
+      - "440"
       Content-Type:
       - application/xml; charset=UTF-8
       Date:
-      - Fri, 31 Jul 2020 10:53:10 GMT
+      - Mon, 03 Aug 2020 12:55:07 GMT
       Server:
       - Apache
       Strict-Transport-Security:
