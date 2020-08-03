@@ -725,6 +725,7 @@ func (s *Service) basicGetRequest(location string) ([]byte, error) {
 // Wrapper that performs a GET request to the specified location and returns the response or a service error
 func (s *Service) basicJSONGetRequest(location string) ([]byte, error) {
 	requestURL := s.client.CreateRequestURL(location)
+
 	response, err := s.client.PerformJSONGetRequest(requestURL)
 
 	if err != nil {
