@@ -1,0 +1,181 @@
+---
+version: 1
+interactions:
+- request:
+    body: <storage><size>10</size><tier>maxiops</tier><title>Test storage</title><zone>fi-hel2</zone><backup_rule><interval>daily</interval><time>0430</time><retention>30</retention></backup_rule></storage>
+    form: {}
+    headers:
+      Accept:
+      - application/xml
+      Content-Type:
+      - application/xml
+    url: https://api.upcloud.com/1.2/storage
+    method: POST
+  response:
+    body: |
+      <?xml version="1.0" encoding="utf-8"?>
+      <storage>
+        <access>private</access>
+        <backup_rule>
+          <interval>daily</interval>
+          <retention>30</retention>
+          <time>0430</time>
+        </backup_rule>
+        <backups>
+        </backups>
+        <license>0</license>
+        <servers>
+        </servers>
+        <size>10</size>
+        <state>online</state>
+        <tier>maxiops</tier>
+        <title>Test storage</title>
+        <type>normal</type>
+        <uuid>0175dbe1-54ec-43b1-a6de-a76d23d04959</uuid>
+        <zone>fi-hel2</zone>
+      </storage>
+    headers:
+      Content-Length:
+      - "468"
+      Content-Type:
+      - application/xml; charset=UTF-8
+      Date:
+      - Fri, 31 Jul 2020 19:54:52 GMT
+      Server:
+      - Apache
+      Strict-Transport-Security:
+      - max-age=63072000
+    status: 201 Created
+    code: 201
+    duration: ""
+- request:
+    body: <storage><title>backup-1596225302000000000</title></storage>
+    form: {}
+    headers:
+      Accept:
+      - application/xml
+      Content-Type:
+      - application/xml
+    url: https://api.upcloud.com/1.2/storage/0175dbe1-54ec-43b1-a6de-a76d23d04959/backup
+    method: POST
+  response:
+    body: |
+      <?xml version="1.0" encoding="utf-8"?>
+      <storage>
+        <access>private</access>
+        <created>2020-07-31T19:55:02Z</created>
+        <license>0</license>
+        <origin>0175dbe1-54ec-43b1-a6de-a76d23d04959</origin>
+        <progress>0</progress>
+        <servers>
+        </servers>
+        <size>10</size>
+        <state>maintenance</state>
+        <title>backup-1596225302000000000</title>
+        <type>backup</type>
+        <uuid>0174d914-0948-4f12-b7d8-28a077310adc</uuid>
+        <zone>fi-hel2</zone>
+      </storage>
+    headers:
+      Content-Length:
+      - "446"
+      Content-Type:
+      - application/xml; charset=UTF-8
+      Date:
+      - Fri, 31 Jul 2020 19:55:02 GMT
+      Server:
+      - Apache
+      Strict-Transport-Security:
+      - max-age=63072000
+    status: 201 Created
+    code: 201
+    duration: ""
+- request:
+    body: ""
+    form: {}
+    headers:
+      Accept:
+      - application/xml
+      Content-Type:
+      - application/xml
+    url: https://api.upcloud.com/1.2/storage/0175dbe1-54ec-43b1-a6de-a76d23d04959
+    method: GET
+  response:
+    body: |
+      <?xml version="1.0" encoding="utf-8"?>
+      <storage>
+        <access>private</access>
+        <backup_rule>
+          <interval>daily</interval>
+          <retention>30</retention>
+          <time>0430</time>
+        </backup_rule>
+        <backups>
+          <backup>0174d914-0948-4f12-b7d8-28a077310adc</backup>
+        </backups>
+        <license>0</license>
+        <servers>
+        </servers>
+        <size>10</size>
+        <state>online</state>
+        <tier>maxiops</tier>
+        <title>Test storage</title>
+        <type>normal</type>
+        <uuid>0175dbe1-54ec-43b1-a6de-a76d23d04959</uuid>
+        <zone>fi-hel2</zone>
+      </storage>
+    headers:
+      Content-Length:
+      - "526"
+      Content-Type:
+      - application/xml; charset=UTF-8
+      Date:
+      - Fri, 31 Jul 2020 19:55:02 GMT
+      Server:
+      - Apache
+      Strict-Transport-Security:
+      - max-age=63072000
+    status: 200 OK
+    code: 200
+    duration: ""
+- request:
+    body: ""
+    form: {}
+    headers:
+      Accept:
+      - application/xml
+      Content-Type:
+      - application/xml
+    url: https://api.upcloud.com/1.2/storage/0174d914-0948-4f12-b7d8-28a077310adc
+    method: GET
+  response:
+    body: |
+      <?xml version="1.0" encoding="utf-8"?>
+      <storage>
+        <access>private</access>
+        <created>2020-07-31T19:55:02Z</created>
+        <license>0</license>
+        <origin>0175dbe1-54ec-43b1-a6de-a76d23d04959</origin>
+        <servers>
+        </servers>
+        <size>10</size>
+        <state>online</state>
+        <title>backup-1596225302000000000</title>
+        <type>backup</type>
+        <uuid>0174d914-0948-4f12-b7d8-28a077310adc</uuid>
+        <zone>fi-hel2</zone>
+      </storage>
+    headers:
+      Content-Length:
+      - "416"
+      Content-Type:
+      - application/xml; charset=UTF-8
+      Date:
+      - Fri, 31 Jul 2020 19:55:02 GMT
+      Server:
+      - Apache
+      Strict-Transport-Security:
+      - max-age=63072000
+    status: 200 OK
+    code: 200
+    duration: ""

@@ -1,0 +1,702 @@
+---
+version: 1
+interactions:
+- request:
+    body: '{"server":{"hostname":"uploud-go-sdk-integration-test-testcreatedeleteserverandstorage.example.com","ip_addresses":{"ip_address":[{"access":"private","family":"IPv4"},{"access":"public","family":"IPv4"},{"access":"public","family":"IPv6"}]},"password_delivery":"none","storage_devices":{"storage_device":[{"action":"clone","storage":"01000000-0000-4000-8000-000030060200","title":"disk1","size":30,"tier":"maxiops"}]},"title":"uploud-go-sdk-integration-test-TestCreateDeleteServerAndStorage","zone":"fi-hel2"}}'
+    form: {}
+    headers:
+      Accept:
+      - application/json
+      Content-Type:
+      - application/json
+    url: https://api.upcloud.com/1.2/server
+    method: POST
+  response:
+    body: |
+      {
+         "server" : {
+            "boot_order" : "disk",
+            "core_number" : "1",
+            "created" : 1596208107,
+            "firewall" : "off",
+            "hostname" : "uploud-go-sdk-integration-test-testcreatedeleteserverandstorage.example.com",
+            "ip_addresses" : {
+               "ip_address" : [
+                  {
+                     "access" : "private",
+                     "address" : "10.6.0.230",
+                     "family" : "IPv4"
+                  },
+                  {
+                     "access" : "public",
+                     "address" : "2a04:3545:1000:720:ec1b:dbff:feca:62fa",
+                     "family" : "IPv6"
+                  },
+                  {
+                     "access" : "public",
+                     "address" : "94.237.104.24",
+                     "family" : "IPv4"
+                  }
+               ]
+            },
+            "license" : 0,
+            "memory_amount" : "1024",
+            "metadata" : "no",
+            "nic_model" : "virtio",
+            "password" : "tne5eb92",
+            "plan" : "custom",
+            "plan_ipv4_bytes" : "0",
+            "plan_ipv6_bytes" : "0",
+            "progress" : "0",
+            "state" : "maintenance",
+            "storage_devices" : {
+               "storage_device" : [
+                  {
+                     "address" : "virtio:0",
+                     "boot_disk" : "0",
+                     "storage" : "01fb34b1-c6c6-429d-8bc8-7ceadae61644",
+                     "storage_size" : 30,
+                     "storage_title" : "disk1",
+                     "type" : "disk"
+                  }
+               ]
+            },
+            "tags" : {
+               "tag" : []
+            },
+            "timezone" : "UTC",
+            "title" : "uploud-go-sdk-integration-test-TestCreateDeleteServerAndStorage",
+            "username" : "root",
+            "uuid" : "00b08366-cfde-47c4-a9ea-eb3fe19358a4",
+            "video_model" : "cirrus",
+            "vnc" : "off",
+            "vnc_password" : "8S744uPG",
+            "zone" : "fi-hel2"
+         }
+      }
+    headers:
+      Content-Length:
+      - "1740"
+      Content-Type:
+      - application/json; charset=UTF-8
+      Date:
+      - Fri, 31 Jul 2020 15:08:27 GMT
+      Server:
+      - Apache
+      Strict-Transport-Security:
+      - max-age=63072000
+    status: 202 Accepted
+    code: 202
+    duration: ""
+- request:
+    body: ""
+    form: {}
+    headers:
+      Accept:
+      - application/xml
+      Content-Type:
+      - application/xml
+    url: https://api.upcloud.com/1.2/server/00b08366-cfde-47c4-a9ea-eb3fe19358a4
+    method: GET
+  response:
+    body: |
+      <?xml version="1.0" encoding="utf-8"?>
+      <server>
+        <boot_order>disk</boot_order>
+        <core_number>1</core_number>
+        <created>1596208107</created>
+        <firewall>off</firewall>
+        <hostname>uploud-go-sdk-integration-test-testcreatedeleteserverandstorage.example.com</hostname>
+        <ip_addresses>
+          <ip_address>
+            <access>private</access>
+            <address>10.6.0.230</address>
+            <family>IPv4</family>
+          </ip_address>
+          <ip_address>
+            <access>public</access>
+            <address>2a04:3545:1000:720:ec1b:dbff:feca:62fa</address>
+            <family>IPv6</family>
+          </ip_address>
+          <ip_address>
+            <access>public</access>
+            <address>94.237.104.24</address>
+            <family>IPv4</family>
+          </ip_address>
+        </ip_addresses>
+        <license>0</license>
+        <memory_amount>1024</memory_amount>
+        <metadata>no</metadata>
+        <nic_model>virtio</nic_model>
+        <plan>custom</plan>
+        <plan_ipv4_bytes>0</plan_ipv4_bytes>
+        <plan_ipv6_bytes>0</plan_ipv6_bytes>
+        <progress>85</progress>
+        <state>maintenance</state>
+        <storage_devices>
+          <storage_device>
+            <address>virtio:0</address>
+            <boot_disk>0</boot_disk>
+            <storage>01fb34b1-c6c6-429d-8bc8-7ceadae61644</storage>
+            <storage_size>30</storage_size>
+            <storage_title>disk1</storage_title>
+            <type>disk</type>
+          </storage_device>
+        </storage_devices>
+        <tags>
+        </tags>
+        <timezone>UTC</timezone>
+        <title>uploud-go-sdk-integration-test-TestCreateDeleteServerAndStorage</title>
+        <uuid>00b08366-cfde-47c4-a9ea-eb3fe19358a4</uuid>
+        <video_model>cirrus</video_model>
+        <vnc>off</vnc>
+        <vnc_password>8S744uPG</vnc_password>
+        <zone>fi-hel2</zone>
+      </server>
+    headers:
+      Content-Length:
+      - "1618"
+      Content-Type:
+      - application/xml; charset=UTF-8
+      Date:
+      - Fri, 31 Jul 2020 15:08:33 GMT
+      Server:
+      - Apache
+      Strict-Transport-Security:
+      - max-age=63072000
+    status: 200 OK
+    code: 200
+    duration: ""
+- request:
+    body: ""
+    form: {}
+    headers:
+      Accept:
+      - application/xml
+      Content-Type:
+      - application/xml
+    url: https://api.upcloud.com/1.2/server/00b08366-cfde-47c4-a9ea-eb3fe19358a4
+    method: GET
+  response:
+    body: |
+      <?xml version="1.0" encoding="utf-8"?>
+      <server>
+        <boot_order>disk</boot_order>
+        <core_number>1</core_number>
+        <created>1596208107</created>
+        <firewall>off</firewall>
+        <hostname>uploud-go-sdk-integration-test-testcreatedeleteserverandstorage.example.com</hostname>
+        <ip_addresses>
+          <ip_address>
+            <access>private</access>
+            <address>10.6.0.230</address>
+            <family>IPv4</family>
+          </ip_address>
+          <ip_address>
+            <access>public</access>
+            <address>2a04:3545:1000:720:ec1b:dbff:feca:62fa</address>
+            <family>IPv6</family>
+          </ip_address>
+          <ip_address>
+            <access>public</access>
+            <address>94.237.104.24</address>
+            <family>IPv4</family>
+          </ip_address>
+        </ip_addresses>
+        <license>0</license>
+        <memory_amount>1024</memory_amount>
+        <metadata>no</metadata>
+        <nic_model>virtio</nic_model>
+        <plan>custom</plan>
+        <plan_ipv4_bytes>0</plan_ipv4_bytes>
+        <plan_ipv6_bytes>0</plan_ipv6_bytes>
+        <state>maintenance</state>
+        <storage_devices>
+          <storage_device>
+            <address>virtio:0</address>
+            <boot_disk>0</boot_disk>
+            <storage>01fb34b1-c6c6-429d-8bc8-7ceadae61644</storage>
+            <storage_size>30</storage_size>
+            <storage_title>disk1</storage_title>
+            <type>disk</type>
+          </storage_device>
+        </storage_devices>
+        <tags>
+        </tags>
+        <timezone>UTC</timezone>
+        <title>uploud-go-sdk-integration-test-TestCreateDeleteServerAndStorage</title>
+        <uuid>00b08366-cfde-47c4-a9ea-eb3fe19358a4</uuid>
+        <video_model>cirrus</video_model>
+        <vnc>off</vnc>
+        <vnc_password>8S744uPG</vnc_password>
+        <zone>fi-hel2</zone>
+      </server>
+    headers:
+      Content-Length:
+      - "1592"
+      Content-Type:
+      - application/xml; charset=UTF-8
+      Date:
+      - Fri, 31 Jul 2020 15:08:38 GMT
+      Server:
+      - Apache
+      Strict-Transport-Security:
+      - max-age=63072000
+    status: 200 OK
+    code: 200
+    duration: ""
+- request:
+    body: ""
+    form: {}
+    headers:
+      Accept:
+      - application/xml
+      Content-Type:
+      - application/xml
+    url: https://api.upcloud.com/1.2/server/00b08366-cfde-47c4-a9ea-eb3fe19358a4
+    method: GET
+  response:
+    body: |
+      <?xml version="1.0" encoding="utf-8"?>
+      <server>
+        <boot_order>disk</boot_order>
+        <core_number>1</core_number>
+        <created>1596208107</created>
+        <firewall>off</firewall>
+        <hostname>uploud-go-sdk-integration-test-testcreatedeleteserverandstorage.example.com</hostname>
+        <ip_addresses>
+          <ip_address>
+            <access>private</access>
+            <address>10.6.0.230</address>
+            <family>IPv4</family>
+          </ip_address>
+          <ip_address>
+            <access>public</access>
+            <address>2a04:3545:1000:720:ec1b:dbff:feca:62fa</address>
+            <family>IPv6</family>
+          </ip_address>
+          <ip_address>
+            <access>public</access>
+            <address>94.237.104.24</address>
+            <family>IPv4</family>
+          </ip_address>
+        </ip_addresses>
+        <license>0</license>
+        <memory_amount>1024</memory_amount>
+        <metadata>no</metadata>
+        <nic_model>virtio</nic_model>
+        <plan>custom</plan>
+        <plan_ipv4_bytes>0</plan_ipv4_bytes>
+        <plan_ipv6_bytes>0</plan_ipv6_bytes>
+        <state>maintenance</state>
+        <storage_devices>
+          <storage_device>
+            <address>virtio:0</address>
+            <boot_disk>0</boot_disk>
+            <storage>01fb34b1-c6c6-429d-8bc8-7ceadae61644</storage>
+            <storage_size>30</storage_size>
+            <storage_title>disk1</storage_title>
+            <type>disk</type>
+          </storage_device>
+        </storage_devices>
+        <tags>
+        </tags>
+        <timezone>UTC</timezone>
+        <title>uploud-go-sdk-integration-test-TestCreateDeleteServerAndStorage</title>
+        <uuid>00b08366-cfde-47c4-a9ea-eb3fe19358a4</uuid>
+        <video_model>cirrus</video_model>
+        <vnc>off</vnc>
+        <vnc_password>8S744uPG</vnc_password>
+        <zone>fi-hel2</zone>
+      </server>
+    headers:
+      Content-Length:
+      - "1592"
+      Content-Type:
+      - application/xml; charset=UTF-8
+      Date:
+      - Fri, 31 Jul 2020 15:08:43 GMT
+      Server:
+      - Apache
+      Strict-Transport-Security:
+      - max-age=63072000
+    status: 200 OK
+    code: 200
+    duration: ""
+- request:
+    body: ""
+    form: {}
+    headers:
+      Accept:
+      - application/xml
+      Content-Type:
+      - application/xml
+    url: https://api.upcloud.com/1.2/server/00b08366-cfde-47c4-a9ea-eb3fe19358a4
+    method: GET
+  response:
+    body: |
+      <?xml version="1.0" encoding="utf-8"?>
+      <server>
+        <boot_order>disk</boot_order>
+        <core_number>1</core_number>
+        <created>1596208107</created>
+        <firewall>off</firewall>
+        <host>5201216131</host>
+        <hostname>uploud-go-sdk-integration-test-testcreatedeleteserverandstorage.example.com</hostname>
+        <ip_addresses>
+          <ip_address>
+            <access>private</access>
+            <address>10.6.0.230</address>
+            <family>IPv4</family>
+          </ip_address>
+          <ip_address>
+            <access>public</access>
+            <address>2a04:3545:1000:720:ec1b:dbff:feca:62fa</address>
+            <family>IPv6</family>
+          </ip_address>
+          <ip_address>
+            <access>public</access>
+            <address>94.237.104.24</address>
+            <family>IPv4</family>
+          </ip_address>
+        </ip_addresses>
+        <license>0</license>
+        <memory_amount>1024</memory_amount>
+        <metadata>no</metadata>
+        <nic_model>virtio</nic_model>
+        <plan>custom</plan>
+        <plan_ipv4_bytes>0</plan_ipv4_bytes>
+        <plan_ipv6_bytes>0</plan_ipv6_bytes>
+        <state>started</state>
+        <storage_devices>
+          <storage_device>
+            <address>virtio:0</address>
+            <boot_disk>0</boot_disk>
+            <storage>01fb34b1-c6c6-429d-8bc8-7ceadae61644</storage>
+            <storage_size>30</storage_size>
+            <storage_title>disk1</storage_title>
+            <type>disk</type>
+          </storage_device>
+        </storage_devices>
+        <tags>
+        </tags>
+        <timezone>UTC</timezone>
+        <title>uploud-go-sdk-integration-test-TestCreateDeleteServerAndStorage</title>
+        <uuid>00b08366-cfde-47c4-a9ea-eb3fe19358a4</uuid>
+        <video_model>cirrus</video_model>
+        <vnc>off</vnc>
+        <vnc_password>8S744uPG</vnc_password>
+        <zone>fi-hel2</zone>
+      </server>
+    headers:
+      Content-Length:
+      - "1614"
+      Content-Type:
+      - application/xml; charset=UTF-8
+      Date:
+      - Fri, 31 Jul 2020 15:08:48 GMT
+      Server:
+      - Apache
+      Strict-Transport-Security:
+      - max-age=63072000
+    status: 200 OK
+    code: 200
+    duration: ""
+- request:
+    body: <stop_server><timeout>900</timeout><stop_type>hard</stop_type></stop_server>
+    form: {}
+    headers:
+      Accept:
+      - application/xml
+      Content-Type:
+      - application/xml
+    url: https://api.upcloud.com/1.2/server/00b08366-cfde-47c4-a9ea-eb3fe19358a4/stop
+    method: POST
+  response:
+    body: |
+      <?xml version="1.0" encoding="utf-8"?>
+      <server>
+        <boot_order>disk</boot_order>
+        <core_number>1</core_number>
+        <created>1596208107</created>
+        <firewall>off</firewall>
+        <host>5201216131</host>
+        <hostname>uploud-go-sdk-integration-test-testcreatedeleteserverandstorage.example.com</hostname>
+        <ip_addresses>
+          <ip_address>
+            <access>private</access>
+            <address>10.6.0.230</address>
+            <family>IPv4</family>
+          </ip_address>
+          <ip_address>
+            <access>public</access>
+            <address>2a04:3545:1000:720:ec1b:dbff:feca:62fa</address>
+            <family>IPv6</family>
+          </ip_address>
+          <ip_address>
+            <access>public</access>
+            <address>94.237.104.24</address>
+            <family>IPv4</family>
+          </ip_address>
+        </ip_addresses>
+        <license>0</license>
+        <memory_amount>1024</memory_amount>
+        <metadata>no</metadata>
+        <nic_model>virtio</nic_model>
+        <plan>custom</plan>
+        <plan_ipv4_bytes>0</plan_ipv4_bytes>
+        <plan_ipv6_bytes>0</plan_ipv6_bytes>
+        <state>started</state>
+        <storage_devices>
+          <storage_device>
+            <address>virtio:0</address>
+            <boot_disk>0</boot_disk>
+            <storage>01fb34b1-c6c6-429d-8bc8-7ceadae61644</storage>
+            <storage_size>30</storage_size>
+            <storage_title>disk1</storage_title>
+            <type>disk</type>
+          </storage_device>
+        </storage_devices>
+        <tags>
+        </tags>
+        <timezone>UTC</timezone>
+        <title>uploud-go-sdk-integration-test-TestCreateDeleteServerAndStorage</title>
+        <uuid>00b08366-cfde-47c4-a9ea-eb3fe19358a4</uuid>
+        <video_model>cirrus</video_model>
+        <vnc>off</vnc>
+        <vnc_password>8S744uPG</vnc_password>
+        <zone>fi-hel2</zone>
+      </server>
+    headers:
+      Content-Length:
+      - "1614"
+      Content-Type:
+      - application/xml; charset=UTF-8
+      Date:
+      - Fri, 31 Jul 2020 15:08:49 GMT
+      Server:
+      - Apache
+      Strict-Transport-Security:
+      - max-age=63072000
+    status: 200 OK
+    code: 200
+    duration: ""
+- request:
+    body: ""
+    form: {}
+    headers:
+      Accept:
+      - application/xml
+      Content-Type:
+      - application/xml
+    url: https://api.upcloud.com/1.2/server/00b08366-cfde-47c4-a9ea-eb3fe19358a4
+    method: GET
+  response:
+    body: |
+      <?xml version="1.0" encoding="utf-8"?>
+      <server>
+        <boot_order>disk</boot_order>
+        <core_number>1</core_number>
+        <created>1596208107</created>
+        <firewall>off</firewall>
+        <host>5201216131</host>
+        <hostname>uploud-go-sdk-integration-test-testcreatedeleteserverandstorage.example.com</hostname>
+        <ip_addresses>
+          <ip_address>
+            <access>private</access>
+            <address>10.6.0.230</address>
+            <family>IPv4</family>
+          </ip_address>
+          <ip_address>
+            <access>public</access>
+            <address>2a04:3545:1000:720:ec1b:dbff:feca:62fa</address>
+            <family>IPv6</family>
+          </ip_address>
+          <ip_address>
+            <access>public</access>
+            <address>94.237.104.24</address>
+            <family>IPv4</family>
+          </ip_address>
+        </ip_addresses>
+        <license>0</license>
+        <memory_amount>1024</memory_amount>
+        <metadata>no</metadata>
+        <nic_model>virtio</nic_model>
+        <plan>custom</plan>
+        <plan_ipv4_bytes>0</plan_ipv4_bytes>
+        <plan_ipv6_bytes>0</plan_ipv6_bytes>
+        <state>maintenance</state>
+        <storage_devices>
+          <storage_device>
+            <address>virtio:0</address>
+            <boot_disk>0</boot_disk>
+            <storage>01fb34b1-c6c6-429d-8bc8-7ceadae61644</storage>
+            <storage_size>30</storage_size>
+            <storage_title>disk1</storage_title>
+            <type>disk</type>
+          </storage_device>
+        </storage_devices>
+        <tags>
+        </tags>
+        <timezone>UTC</timezone>
+        <title>uploud-go-sdk-integration-test-TestCreateDeleteServerAndStorage</title>
+        <uuid>00b08366-cfde-47c4-a9ea-eb3fe19358a4</uuid>
+        <video_model>cirrus</video_model>
+        <vnc>off</vnc>
+        <vnc_password>8S744uPG</vnc_password>
+        <zone>fi-hel2</zone>
+      </server>
+    headers:
+      Content-Length:
+      - "1618"
+      Content-Type:
+      - application/xml; charset=UTF-8
+      Date:
+      - Fri, 31 Jul 2020 15:08:54 GMT
+      Server:
+      - Apache
+      Strict-Transport-Security:
+      - max-age=63072000
+    status: 200 OK
+    code: 200
+    duration: ""
+- request:
+    body: ""
+    form: {}
+    headers:
+      Accept:
+      - application/xml
+      Content-Type:
+      - application/xml
+    url: https://api.upcloud.com/1.2/server/00b08366-cfde-47c4-a9ea-eb3fe19358a4
+    method: GET
+  response:
+    body: |
+      <?xml version="1.0" encoding="utf-8"?>
+      <server>
+        <boot_order>disk</boot_order>
+        <core_number>1</core_number>
+        <created>1596208107</created>
+        <firewall>off</firewall>
+        <hostname>uploud-go-sdk-integration-test-testcreatedeleteserverandstorage.example.com</hostname>
+        <ip_addresses>
+          <ip_address>
+            <access>private</access>
+            <address>10.6.0.230</address>
+            <family>IPv4</family>
+          </ip_address>
+          <ip_address>
+            <access>public</access>
+            <address>2a04:3545:1000:720:ec1b:dbff:feca:62fa</address>
+            <family>IPv6</family>
+          </ip_address>
+          <ip_address>
+            <access>public</access>
+            <address>94.237.104.24</address>
+            <family>IPv4</family>
+          </ip_address>
+        </ip_addresses>
+        <license>0</license>
+        <memory_amount>1024</memory_amount>
+        <metadata>no</metadata>
+        <nic_model>virtio</nic_model>
+        <plan>custom</plan>
+        <plan_ipv4_bytes>0</plan_ipv4_bytes>
+        <plan_ipv6_bytes>0</plan_ipv6_bytes>
+        <state>stopped</state>
+        <storage_devices>
+          <storage_device>
+            <address>virtio:0</address>
+            <boot_disk>0</boot_disk>
+            <storage>01fb34b1-c6c6-429d-8bc8-7ceadae61644</storage>
+            <storage_size>30</storage_size>
+            <storage_title>disk1</storage_title>
+            <type>disk</type>
+          </storage_device>
+        </storage_devices>
+        <tags>
+        </tags>
+        <timezone>UTC</timezone>
+        <title>uploud-go-sdk-integration-test-TestCreateDeleteServerAndStorage</title>
+        <uuid>00b08366-cfde-47c4-a9ea-eb3fe19358a4</uuid>
+        <video_model>cirrus</video_model>
+        <vnc>off</vnc>
+        <vnc_password>8S744uPG</vnc_password>
+        <zone>fi-hel2</zone>
+      </server>
+    headers:
+      Content-Length:
+      - "1588"
+      Content-Type:
+      - application/xml; charset=UTF-8
+      Date:
+      - Fri, 31 Jul 2020 15:08:59 GMT
+      Server:
+      - Apache
+      Strict-Transport-Security:
+      - max-age=63072000
+    status: 200 OK
+    code: 200
+    duration: ""
+- request:
+    body: ""
+    form: {}
+    headers:
+      Accept:
+      - application/json
+      Content-Type:
+      - application/json
+    url: https://api.upcloud.com/1.2/server/00b08366-cfde-47c4-a9ea-eb3fe19358a4/?storages=1
+    method: DELETE
+  response:
+    body: ""
+    headers:
+      Date:
+      - Fri, 31 Jul 2020 15:09:00 GMT
+      Server:
+      - Apache
+      Strict-Transport-Security:
+      - max-age=63072000
+    status: 204 No Content
+    code: 204
+    duration: ""
+- request:
+    body: ""
+    form: {}
+    headers:
+      Accept:
+      - application/xml
+      Content-Type:
+      - application/xml
+    url: https://api.upcloud.com/1.2/storage/private
+    method: GET
+  response:
+    body: |
+      <?xml version="1.0" encoding="utf-8"?>
+      <storages>
+        <storage>
+          <access>private</access>
+          <license>0</license>
+          <size>30</size>
+          <state>online</state>
+          <tier>maxiops</tier>
+          <title>disk1</title>
+          <type>normal</type>
+          <uuid>01d397b7-eabd-42ee-9d76-775fae9098d1</uuid>
+          <zone>fi-hel2</zone>
+        </storage>
+      </storages>
+    headers:
+      Content-Length:
+      - "340"
+      Content-Type:
+      - application/xml; charset=UTF-8
+      Date:
+      - Fri, 31 Jul 2020 15:09:00 GMT
+      Server:
+      - Apache
+      Strict-Transport-Security:
+      - max-age=63072000
+    status: 200 OK
+    code: 200
+    duration: ""
