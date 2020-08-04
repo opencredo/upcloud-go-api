@@ -852,18 +852,16 @@ func TestGetIPAddresses(t *testing.T) {
 		}
 		assert.Equal(t, len(serverDetails.IPAddresses), foundCount)
 
-		for i, ip := range serverDetails.IPAddresses {
+		for _, ip := range serverDetails.IPAddresses {
+			require.NotEmpty(t, ip.Address)
 			ipAddress, err := svc.GetIPAddressDetails(&request.GetIPAddressDetailsRequest{
 				Address: ip.Address,
 			})
 			require.NoError(t, err)
 
-			assert.Equal(t, ipAddresses.IPAddresses[i].Address, ipAddress.Address)
-			assert.Equal(t, ipAddresses.IPAddresses[i].Access, ipAddress.Access)
-			assert.Equal(t, ipAddresses.IPAddresses[i].Family, ipAddress.Family)
-			assert.Equal(t, ipAddresses.IPAddresses[i].PTRRecord, ipAddress.PTRRecord)
-			assert.Equal(t, ipAddresses.IPAddresses[i].PartOfPlan, ipAddress.PartOfPlan)
-			assert.Equal(t, ipAddresses.IPAddresses[i].ServerUUID, ipAddress.ServerUUID)
+			assert.Equal(t, ip.Address, ipAddress.Address)
+			assert.Equal(t, ip.Access, ipAddress.Access)
+			assert.Equal(t, ip.Family, ipAddress.Family)
 		}
 	})
 }
