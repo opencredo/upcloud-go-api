@@ -33,7 +33,7 @@ interactions:
             "tier" : "maxiops",
             "title" : "Test storage",
             "type" : "normal",
-            "uuid" : "01202292-7496-4c1d-93b5-8dee6124675c",
+            "uuid" : "0104ecba-7976-4a95-b825-b38ff7c481d9",
             "zone" : "fi-hel2"
          }
       }
@@ -43,7 +43,7 @@ interactions:
       Content-Type:
       - application/json; charset=UTF-8
       Date:
-      - Tue, 04 Aug 2020 09:11:25 GMT
+      - Tue, 04 Aug 2020 09:18:02 GMT
       Server:
       - Apache
       Strict-Transport-Security:
@@ -52,45 +52,48 @@ interactions:
     code: 201
     duration: ""
 - request:
-    body: <storage><title>New fancy title</title></storage>
+    body: '{"storage":{"title":"New fancy title"}}'
     form: {}
     headers:
       Accept:
-      - application/xml
+      - application/json
       Content-Type:
-      - application/xml
-    url: https://api.upcloud.com/1.2/storage/01202292-7496-4c1d-93b5-8dee6124675c
+      - application/json
+    url: https://api.upcloud.com/1.2/storage/0104ecba-7976-4a95-b825-b38ff7c481d9
     method: PUT
   response:
     body: |
-      <?xml version="1.0" encoding="utf-8"?>
-      <storage>
-        <access>private</access>
-        <backup_rule>
-          <interval>daily</interval>
-          <retention>30</retention>
-          <time>0430</time>
-        </backup_rule>
-        <backups>
-        </backups>
-        <license>0</license>
-        <servers>
-        </servers>
-        <size>10</size>
-        <state>online</state>
-        <tier>maxiops</tier>
-        <title>New fancy title</title>
-        <type>normal</type>
-        <uuid>01202292-7496-4c1d-93b5-8dee6124675c</uuid>
-        <zone>fi-hel2</zone>
-      </storage>
+      {
+         "storage" : {
+            "access" : "private",
+            "backup_rule" : {
+               "interval" : "daily",
+               "retention" : "30",
+               "time" : "0430"
+            },
+            "backups" : {
+               "backup" : []
+            },
+            "license" : 0,
+            "servers" : {
+               "server" : []
+            },
+            "size" : 10,
+            "state" : "online",
+            "tier" : "maxiops",
+            "title" : "New fancy title",
+            "type" : "normal",
+            "uuid" : "0104ecba-7976-4a95-b825-b38ff7c481d9",
+            "zone" : "fi-hel2"
+         }
+      }
     headers:
       Content-Length:
-      - "471"
+      - "508"
       Content-Type:
-      - application/xml; charset=UTF-8
+      - application/json; charset=UTF-8
       Date:
-      - Tue, 04 Aug 2020 09:11:40 GMT
+      - Tue, 04 Aug 2020 09:18:16 GMT
       Server:
       - Apache
       Strict-Transport-Security:
@@ -106,13 +109,13 @@ interactions:
       - application/xml
       Content-Type:
       - application/xml
-    url: https://api.upcloud.com/1.2/storage/01202292-7496-4c1d-93b5-8dee6124675c
+    url: https://api.upcloud.com/1.2/storage/0104ecba-7976-4a95-b825-b38ff7c481d9
     method: DELETE
   response:
     body: ""
     headers:
       Date:
-      - Tue, 04 Aug 2020 09:11:40 GMT
+      - Tue, 04 Aug 2020 09:18:17 GMT
       Server:
       - Apache
       Strict-Transport-Security:

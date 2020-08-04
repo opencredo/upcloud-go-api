@@ -76,12 +76,24 @@ func (r CreateStorageRequest) MarshalJSON() ([]byte, error) {
 
 // ModifyStorageRequest represents a request to modify a storage device
 type ModifyStorageRequest struct {
-	XMLName xml.Name `xml:"storage"`
-	UUID    string   `xml:"-"`
+	XMLName xml.Name `xml:"storage" json:"-"`
+	UUID    string   `xml:"-" json:"-"`
 
-	Title      string              `xml:"title,omitempty"`
-	Size       int                 `xml:"size,omitempty"`
-	BackupRule *upcloud.BackupRule `xml:"backup_rule,omitempty"`
+	Title      string              `xml:"title,omitempty" json:"title,omitempty"`
+	Size       int                 `xml:"size,omitempty" json:"size,omitempty,string"`
+	BackupRule *upcloud.BackupRule `xml:"backup_rule,omitempty" json:"backup_rule,omitempty"`
+}
+
+// MarshalJSON is a custom marshaller that deals with
+// deeply embedded values.
+func (r ModifyStorageRequest) MarshalJSON() ([]byte, error) {
+	type localModifyStorageRequest ModifyStorageRequest
+	v := struct {
+		ModifyStorageRequest localModifyStorageRequest `json:"storage"`
+	}{}
+	v.ModifyStorageRequest = localModifyStorageRequest(r)
+
+	return json.Marshal(&v)
 }
 
 // RequestURL implements the Request interface

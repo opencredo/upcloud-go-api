@@ -72,13 +72,21 @@ func TestCreateStorageRequest(t *testing.T) {
 func TestModifyStorageRequest(t *testing.T) {
 	request := ModifyStorageRequest{
 		UUID:  "foo",
-		Title: "New fancy title",
+		Title: "A larger storage",
+		Size:  20,
 	}
 
-	expectedXML := "<storage><title>New fancy title</title></storage>"
-	actualXML, err := xml.Marshal(&request)
-	assert.Nil(t, err)
-	assert.Equal(t, expectedXML, string(actualXML))
+	expectedJSON := `
+	  {
+        "storage": {
+          "size": "20",
+          "title": "A larger storage"
+        }
+      }
+	`
+	actualJSON, err := json.Marshal(&request)
+	assert.NoError(t, err)
+	assert.JSONEq(t, expectedJSON, string(actualJSON))
 	assert.Equal(t, "/storage/foo", request.RequestURL())
 }
 

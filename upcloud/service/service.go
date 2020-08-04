@@ -404,14 +404,14 @@ func (s *Service) CreateStorage(r *request.CreateStorageRequest) (*upcloud.Stora
 // ModifyStorage modifies the specified storage device
 func (s *Service) ModifyStorage(r *request.ModifyStorageRequest) (*upcloud.StorageDetails, error) {
 	storageDetails := upcloud.StorageDetails{}
-	requestBody, _ := xml.Marshal(r)
-	response, err := s.client.PerformPutRequest(s.client.CreateRequestURL(r.RequestURL()), requestBody)
+	requestBody, _ := json.Marshal(r)
+	response, err := s.client.PerformJSONPutRequest(s.client.CreateRequestURL(r.RequestURL()), requestBody)
 
 	if err != nil {
-		return nil, parseServiceError(err)
+		return nil, parseJSONServiceError(err)
 	}
 
-	xml.Unmarshal(response, &storageDetails)
+	json.Unmarshal(response, &storageDetails)
 
 	return &storageDetails, nil
 }
