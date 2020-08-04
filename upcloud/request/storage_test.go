@@ -149,15 +149,23 @@ func TestDeleteStorageRequest(t *testing.T) {
 func TestCloneStorageRequest(t *testing.T) {
 	request := CloneStorageRequest{
 		UUID:  "foo",
-		Title: "Cloned storage",
-		Zone:  "fi-hel2",
+		Title: "Clone of operating system disk",
+		Zone:  "fi-hel1",
 		Tier:  upcloud.StorageTierMaxIOPS,
 	}
 
-	expectedXML := "<storage><zone>fi-hel2</zone><tier>maxiops</tier><title>Cloned storage</title></storage>"
-	actualXML, err := xml.Marshal(&request)
-	assert.Nil(t, err)
-	assert.Equal(t, expectedXML, string(actualXML))
+	expectedJSON := `
+	{
+      "storage": {
+        "zone": "fi-hel1",
+        "tier": "maxiops",
+        "title": "Clone of operating system disk"
+      }
+    }
+	`
+	actualJSON, err := json.Marshal(&request)
+	assert.NoError(t, err)
+	assert.JSONEq(t, expectedJSON, string(actualJSON))
 	assert.Equal(t, "/storage/foo/clone", request.RequestURL())
 }
 

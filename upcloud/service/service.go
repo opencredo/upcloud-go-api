@@ -460,14 +460,14 @@ func (s *Service) DeleteStorage(r *request.DeleteStorageRequest) error {
 // CloneStorage detaches the specified storage from the specified server
 func (s *Service) CloneStorage(r *request.CloneStorageRequest) (*upcloud.StorageDetails, error) {
 	storageDetails := upcloud.StorageDetails{}
-	requestBody, _ := xml.Marshal(r)
-	response, err := s.client.PerformPostRequest(s.client.CreateRequestURL(r.RequestURL()), requestBody)
+	requestBody, _ := json.Marshal(r)
+	response, err := s.client.PerformJSONPostRequest(s.client.CreateRequestURL(r.RequestURL()), requestBody)
 
 	if err != nil {
-		return nil, parseServiceError(err)
+		return nil, parseJSONServiceError(err)
 	}
 
-	xml.Unmarshal(response, &storageDetails)
+	json.Unmarshal(response, &storageDetails)
 
 	return &storageDetails, nil
 }

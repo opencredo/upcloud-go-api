@@ -166,17 +166,29 @@ func (r *DeleteStorageRequest) RequestURL() string {
 
 // CloneStorageRequest represents a requests to clone a storage device
 type CloneStorageRequest struct {
-	XMLName xml.Name `xml:"storage"`
-	UUID    string   `xml:"-"`
+	XMLName xml.Name `xml:"storage" json:"-"`
+	UUID    string   `xml:"-" json:"-"`
 
-	Zone  string `xml:"zone"`
-	Tier  string `xml:"tier,omitempty"`
-	Title string `xml:"title"`
+	Zone  string `xml:"zone" json:"zone"`
+	Tier  string `xml:"tier,omitempty" json:"tier,omitempty"`
+	Title string `xml:"title" json:"title"`
 }
 
 // RequestURL implements the Request interface
 func (r *CloneStorageRequest) RequestURL() string {
 	return fmt.Sprintf("/storage/%s/clone", r.UUID)
+}
+
+// MarshalJSON is a custom marshaller that deals with
+// deeply embedded values.
+func (r CloneStorageRequest) MarshalJSON() ([]byte, error) {
+	type localCloneStorageRequest CloneStorageRequest
+	v := struct {
+		CloneStorageRequest localCloneStorageRequest `json:"storage"`
+	}{}
+	v.CloneStorageRequest = localCloneStorageRequest(r)
+
+	return json.Marshal(&v)
 }
 
 // TemplatizeStorageRequest represents a request to templatize a storage device
