@@ -375,13 +375,13 @@ func (s *Service) GetStorages(r *request.GetStoragesRequest) (*upcloud.Storages,
 // GetStorageDetails returns extended details about the specified piece of storage
 func (s *Service) GetStorageDetails(r *request.GetStorageDetailsRequest) (*upcloud.StorageDetails, error) {
 	storageDetails := upcloud.StorageDetails{}
-	response, err := s.basicGetRequest(r.RequestURL())
+	response, err := s.basicJSONGetRequest(r.RequestURL())
 
 	if err != nil {
 		return nil, err
 	}
 
-	xml.Unmarshal(response, &storageDetails)
+	json.Unmarshal(response, &storageDetails)
 
 	return &storageDetails, nil
 }
