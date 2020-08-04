@@ -97,12 +97,22 @@ func TestAttachStorageRequest(t *testing.T) {
 		ServerUUID:  "bar",
 		Type:        upcloud.StorageTypeDisk,
 		Address:     "scsi:0:0",
+		BootDisk:    1,
 	}
 
-	expectedXML := "<storage_device><type>disk</type><address>scsi:0:0</address><storage>foo</storage></storage_device>"
-	actualXML, err := xml.Marshal(&request)
-	assert.Nil(t, err)
-	assert.Equal(t, expectedXML, string(actualXML))
+	expectedJSON := `
+	{
+		"storage_device": {
+		  "type": "disk",
+		  "address": "scsi:0:0",
+		  "storage": "foo",
+		  "boot_disk": "1"
+		}
+	}
+	`
+	actualJSON, err := json.Marshal(&request)
+	assert.NoError(t, err)
+	assert.JSONEq(t, expectedJSON, string(actualJSON))
 	assert.Equal(t, "/server/bar/storage/attach", request.RequestURL())
 }
 

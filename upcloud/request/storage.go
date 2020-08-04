@@ -103,12 +103,25 @@ func (r *ModifyStorageRequest) RequestURL() string {
 
 // AttachStorageRequest represents a request to attach a storage device to a server
 type AttachStorageRequest struct {
-	XMLName    xml.Name `xml:"storage_device"`
-	ServerUUID string   `xml:"-"`
+	XMLName    xml.Name `xml:"storage_device" json:"-"`
+	ServerUUID string   `xml:"-" json:"-"`
 
-	Type        string `xml:"type,omitempty"`
-	Address     string `xml:"address,omitempty"`
-	StorageUUID string `xml:"storage,omitempty"`
+	Type        string `xml:"type,omitempty" json:"type,omitempty"`
+	Address     string `xml:"address,omitempty" json:"address,omitempty"`
+	StorageUUID string `xml:"storage,omitempty" json:"storage,omitempty"`
+	BootDisk    int    `xml:"-" json:"boot_disk,omitempty,string"`
+}
+
+// MarshalJSON is a custom marshaller that deals with
+// deeply embedded values.
+func (r AttachStorageRequest) MarshalJSON() ([]byte, error) {
+	type localAttachStorageRequest AttachStorageRequest
+	v := struct {
+		AttachStorageRequest localAttachStorageRequest `json:"storage_device"`
+	}{}
+	v.AttachStorageRequest = localAttachStorageRequest(r)
+
+	return json.Marshal(&v)
 }
 
 // RequestURL implements the Request interface
