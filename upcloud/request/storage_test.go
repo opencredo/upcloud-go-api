@@ -1,6 +1,7 @@
 package request
 
 import (
+	"encoding/json"
 	"encoding/xml"
 	"testing"
 
@@ -46,10 +47,24 @@ func TestCreateStorageRequest(t *testing.T) {
 		},
 	}
 
-	expectedXML := "<storage><size>10</size><tier>maxiops</tier><title>Test storage</title><zone>fi-hel2</zone><backup_rule><interval>daily</interval><time>0430</time><retention>30</retention></backup_rule></storage>"
-	actualXML, err := xml.Marshal(&request)
-	assert.Nil(t, err)
-	assert.Equal(t, expectedXML, string(actualXML))
+	expectedJSON := `
+	  {
+		"storage": {
+		  "size": "10",
+		  "tier": "maxiops",
+		  "title": "Test storage",
+		  "zone": "fi-hel2",
+		  "backup_rule": {
+			"interval": "daily",
+			"time": "0430",
+			"retention": "30"
+		  }
+		}
+	  }
+	`
+	actualJSON, err := json.MarshalIndent(&request, "", "  ")
+	assert.NoError(t, err)
+	assert.JSONEq(t, expectedJSON, string(actualJSON))
 	assert.Equal(t, "/storage", request.RequestURL())
 }
 

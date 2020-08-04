@@ -1,6 +1,7 @@
 package request
 
 import (
+	"encoding/json"
 	"encoding/xml"
 	"fmt"
 	"time"
@@ -47,18 +48,30 @@ func (r *GetStorageDetailsRequest) RequestURL() string {
 
 // CreateStorageRequest represents a request to create a storage device
 type CreateStorageRequest struct {
-	XMLName xml.Name `xml:"storage"`
+	XMLName xml.Name `xml:"storage" json:"-"`
 
-	Size       int                 `xml:"size"`
-	Tier       string              `xml:"tier,omitempty"`
-	Title      string              `xml:"title"`
-	Zone       string              `xml:"zone"`
-	BackupRule *upcloud.BackupRule `xml:"backup_rule,omitempty"`
+	Size       int                 `xml:"size" json:"size,string"`
+	Tier       string              `xml:"tier,omitempty" json:"tier,omitempty"`
+	Title      string              `xml:"title" json:"title,omitempty"`
+	Zone       string              `xml:"zone" json:"zone"`
+	BackupRule *upcloud.BackupRule `xml:"backup_rule,omitempty" json:"backup_rule,omitempty"`
 }
 
 // RequestURL implements the Request interface
 func (r *CreateStorageRequest) RequestURL() string {
 	return "/storage"
+}
+
+// MarshalJSON is a custom marshaller that deals with
+// deeply embedded values.
+func (r CreateStorageRequest) MarshalJSON() ([]byte, error) {
+	type localCreateStorageRequest CreateStorageRequest
+	v := struct {
+		CreateStorageRequest localCreateStorageRequest `json:"storage"`
+	}{}
+	v.CreateStorageRequest = localCreateStorageRequest(r)
+
+	return json.Marshal(&v)
 }
 
 // ModifyStorageRequest represents a request to modify a storage device

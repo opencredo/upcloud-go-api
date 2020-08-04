@@ -389,14 +389,14 @@ func (s *Service) GetStorageDetails(r *request.GetStorageDetailsRequest) (*upclo
 // CreateStorage creates the specified storage
 func (s *Service) CreateStorage(r *request.CreateStorageRequest) (*upcloud.StorageDetails, error) {
 	storageDetails := upcloud.StorageDetails{}
-	requestBody, _ := xml.Marshal(r)
-	response, err := s.client.PerformPostRequest(s.client.CreateRequestURL(r.RequestURL()), requestBody)
+	requestBody, _ := json.Marshal(r)
+	response, err := s.client.PerformJSONPostRequest(s.client.CreateRequestURL(r.RequestURL()), requestBody)
 
 	if err != nil {
-		return nil, parseServiceError(err)
+		return nil, parseJSONServiceError(err)
 	}
 
-	xml.Unmarshal(response, &storageDetails)
+	json.Unmarshal(response, &storageDetails)
 
 	return &storageDetails, nil
 }
