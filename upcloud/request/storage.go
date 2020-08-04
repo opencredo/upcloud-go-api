@@ -193,15 +193,27 @@ func (r CloneStorageRequest) MarshalJSON() ([]byte, error) {
 
 // TemplatizeStorageRequest represents a request to templatize a storage device
 type TemplatizeStorageRequest struct {
-	XMLName xml.Name `xml:"storage"`
-	UUID    string   `xml:"-"`
+	XMLName xml.Name `xml:"storage" json:"-"`
+	UUID    string   `xml:"-" json:"-"`
 
-	Title string `xml:"title"`
+	Title string `xml:"title" json:"title"`
 }
 
 // RequestURL implements the Request interface
 func (r *TemplatizeStorageRequest) RequestURL() string {
 	return fmt.Sprintf("/storage/%s/templatize", r.UUID)
+}
+
+// MarshalJSON is a custom marshaller that deals with
+// deeply embedded values.
+func (r TemplatizeStorageRequest) MarshalJSON() ([]byte, error) {
+	type localTemplatizeStorageRequest TemplatizeStorageRequest
+	v := struct {
+		TemplatizeStorageRequest localTemplatizeStorageRequest `json:"storage"`
+	}{}
+	v.TemplatizeStorageRequest = localTemplatizeStorageRequest(r)
+
+	return json.Marshal(&v)
 }
 
 // WaitForStorageStateRequest represents a request to wait for a storage to enter a specific state

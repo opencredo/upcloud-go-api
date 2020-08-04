@@ -176,10 +176,17 @@ func TestTemplatizeStorageRequest(t *testing.T) {
 		Title: "Templatized storage",
 	}
 
-	expectedXML := "<storage><title>Templatized storage</title></storage>"
-	actualXML, err := xml.Marshal(&request)
-	assert.Nil(t, err)
-	assert.Equal(t, expectedXML, string(actualXML))
+	expectedJSON := `
+	  {
+        "storage": {
+          "title": "Templatized storage"
+        }
+      }
+	`
+	actualJSON, err := json.Marshal(&request)
+	assert.NoError(t, err)
+
+	assert.JSONEq(t, expectedJSON, string(actualJSON))
 	assert.Equal(t, "/storage/foo/templatize", request.RequestURL())
 }
 
