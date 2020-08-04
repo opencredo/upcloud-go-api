@@ -361,13 +361,13 @@ func (s *Service) DeleteTag(r *request.DeleteTagRequest) error {
 // GetStorages returns all available storages
 func (s *Service) GetStorages(r *request.GetStoragesRequest) (*upcloud.Storages, error) {
 	storages := upcloud.Storages{}
-	response, err := s.basicGetRequest(r.RequestURL())
+	response, err := s.basicJSONGetRequest(r.RequestURL())
 
 	if err != nil {
 		return nil, err
 	}
 
-	xml.Unmarshal(response, &storages)
+	json.Unmarshal(response, &storages)
 
 	return &storages, nil
 }
