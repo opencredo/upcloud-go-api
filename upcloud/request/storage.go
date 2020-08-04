@@ -260,15 +260,27 @@ func (r *EjectCDROMRequest) RequestURL() string {
 
 // CreateBackupRequest represents a request to create a backup of a storage device
 type CreateBackupRequest struct {
-	XMLName xml.Name `xml:"storage"`
-	UUID    string   `xml:"-"`
+	XMLName xml.Name `xml:"storage" json:"-"`
+	UUID    string   `xml:"-" json:"-"`
 
-	Title string `xml:"title"`
+	Title string `xml:"title" json:"title"`
 }
 
 // RequestURL implements the Request interface
 func (r *CreateBackupRequest) RequestURL() string {
 	return fmt.Sprintf("/storage/%s/backup", r.UUID)
+}
+
+// MarshalJSON is a custom marshaller that deals with
+// deeply embedded values.
+func (r CreateBackupRequest) MarshalJSON() ([]byte, error) {
+	type localCreateBackupRequest CreateBackupRequest
+	v := struct {
+		CreateBackupRequest localCreateBackupRequest `json:"storage"`
+	}{}
+	v.CreateBackupRequest = localCreateBackupRequest(r)
+
+	return json.Marshal(&v)
 }
 
 // RestoreBackupRequest represents a request to restore a storage from the specified backup

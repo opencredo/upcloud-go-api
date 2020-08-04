@@ -2,7 +2,6 @@ package request
 
 import (
 	"encoding/json"
-	"encoding/xml"
 	"testing"
 
 	"github.com/UpCloudLtd/upcloud-go-api/upcloud"
@@ -223,13 +222,19 @@ func TestEjectCDROMRequest(t *testing.T) {
 func TestCreateBackupRequest(t *testing.T) {
 	request := CreateBackupRequest{
 		UUID:  "foo",
-		Title: "Backup",
+		Title: "Manually created backup",
 	}
 
-	expectedXML := "<storage><title>Backup</title></storage>"
-	actualXML, err := xml.Marshal(&request)
-	assert.Nil(t, err)
-	assert.Equal(t, expectedXML, string(actualXML))
+	expectedJSON := `
+	  {
+		"storage": {
+		  "title": "Manually created backup"
+		}
+	  }
+	`
+	actualJSON, err := json.Marshal(&request)
+	assert.NoError(t, err)
+	assert.JSONEq(t, expectedJSON, string(actualJSON))
 	assert.Equal(t, "/storage/foo/backup", request.RequestURL())
 }
 
