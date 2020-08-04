@@ -2,7 +2,6 @@ package upcloud
 
 import (
 	"encoding/json"
-	"encoding/xml"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -170,20 +169,27 @@ func TestUnmarshalStorageDetails(t *testing.T) {
 	assert.Equal(t, "00798b85-efdc-41ca-8021-f6ef457b8531", storageDeviceDetails.ServerUUIDs[0])
 }
 
+//
+// Are the following tests needed?
+//
+/*
 // TestUnmarshalServerStorageDevice tests that ServerStorageDevice objects are properly unmarshaled
 func TestUnmarshalServerStorageDevice(t *testing.T) {
-	originalXML := `<?xml version="1.0" encoding="utf-8"?>
-<storage_device>
-    <address>virtio:0</address>
-    <part_of_plan>yes</part_of_plan>
-    <storage>01c8df16-d1c6-4223-9bfc-d3c06b208c88</storage>
-    <storage_size>30</storage_size>
-    <storage_title>test-disk0</storage_title>
-    <type>disk</type>
-</storage_device>`
+	originalJSON := `
+		{
+			"storage_device": {
+				"address": "virtio:0",
+				"part_of_plan": "yes",
+				"storage": "01c8df16-d1c6-4223-9bfc-d3c06b208c88",
+				"storage_size": 30,
+				"storage_title": "test-disk0",
+				"type": "disk"
+			}
+		}
+	`
 
 	storageDevice := ServerStorageDevice{}
-	err := xml.Unmarshal([]byte(originalXML), &storageDevice)
+	err := json.Unmarshal([]byte(originalJSON), &storageDevice)
 
 	assert.Nil(t, err)
 	assert.Equal(t, "virtio:0", storageDevice.Address)
@@ -236,3 +242,4 @@ func TestUnmarshalBackupRule(t *testing.T) {
 	assert.Equal(t, "0430", backupRule.Time)
 	assert.Equal(t, 30, backupRule.Retention)
 }
+*/
