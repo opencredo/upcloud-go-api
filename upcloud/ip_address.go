@@ -19,8 +19,9 @@ type IPAddresses struct {
 // UnmarshalJSON is a custom unmarshaller that deals with
 // deeply embedded values.
 func (s *IPAddresses) UnmarshalJSON(b []byte) error {
+	type localIPAddress IPAddress
 	type ipAddressWrapper struct {
-		IPAddresses []IPAddress `json:"ip_address"`
+		IPAddresses []localIPAddress `json:"ip_address"`
 	}
 
 	v := struct {
@@ -31,7 +32,9 @@ func (s *IPAddresses) UnmarshalJSON(b []byte) error {
 		return err
 	}
 
-	s.IPAddresses = v.IPAddresses.IPAddresses
+	for _, ip := range v.IPAddresses.IPAddresses {
+		s.IPAddresses = append(s.IPAddresses, IPAddress(ip))
+	}
 
 	return nil
 }
