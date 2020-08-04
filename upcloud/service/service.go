@@ -448,10 +448,10 @@ func (s *Service) DetachStorage(r *request.DetachStorageRequest) (*upcloud.Serve
 
 // DeleteStorage deletes the specified storage device
 func (s *Service) DeleteStorage(r *request.DeleteStorageRequest) error {
-	err := s.client.PerformDeleteRequest(s.client.CreateRequestURL(r.RequestURL()))
+	err := s.client.PerformJSONDeleteRequest(s.client.CreateRequestURL(r.RequestURL()))
 
 	if err != nil {
-		return parseServiceError(err)
+		return parseJSONServiceError(err)
 	}
 
 	return nil
