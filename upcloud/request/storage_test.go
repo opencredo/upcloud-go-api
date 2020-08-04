@@ -197,10 +197,16 @@ func TestLoadCDROMRequest(t *testing.T) {
 		StorageUUID: "bar",
 	}
 
-	expectedXML := "<storage_device><storage>bar</storage></storage_device>"
-	actualXML, err := xml.Marshal(&request)
+	expectedJSON := `
+	  {
+		"storage_device": {
+		  "storage": "bar"
+		}
+	  }
+	`
+	actualJSON, err := json.Marshal(&request)
 	assert.Nil(t, err)
-	assert.Equal(t, expectedXML, string(actualXML))
+	assert.JSONEq(t, expectedJSON, string(actualJSON))
 	assert.Equal(t, "/server/foo/cdrom/load", request.RequestURL())
 }
 

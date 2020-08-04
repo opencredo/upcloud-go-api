@@ -225,15 +225,27 @@ type WaitForStorageStateRequest struct {
 
 // LoadCDROMRequest represents a request to load a storage as a CD-ROM in the CD-ROM device of a server
 type LoadCDROMRequest struct {
-	XMLName    xml.Name `xml:"storage_device"`
-	ServerUUID string   `xml:"-"`
+	XMLName    xml.Name `xml:"storage_device" json:"-"`
+	ServerUUID string   `xml:"-" json:"-"`
 
-	StorageUUID string `xml:"storage"`
+	StorageUUID string `xml:"storage" json:"storage"`
 }
 
 // RequestURL implements the Request interface
 func (r *LoadCDROMRequest) RequestURL() string {
 	return fmt.Sprintf("/server/%s/cdrom/load", r.ServerUUID)
+}
+
+// MarshalJSON is a custom marshaller that deals with
+// deeply embedded values.
+func (r LoadCDROMRequest) MarshalJSON() ([]byte, error) {
+	type localLoadCDROMRequest LoadCDROMRequest
+	v := struct {
+		LoadCDROMRequest localLoadCDROMRequest `json:"storage_device"`
+	}{}
+	v.LoadCDROMRequest = localLoadCDROMRequest(r)
+
+	return json.Marshal(&v)
 }
 
 // EjectCDROMRequest represents a request to load a storage as a CD-ROM in the CD-ROM device of a server

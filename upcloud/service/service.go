@@ -519,14 +519,14 @@ func (s *Service) WaitForStorageState(r *request.WaitForStorageStateRequest) (*u
 // LoadCDROM loads a storage as a CD-ROM in the CD-ROM device of a server
 func (s *Service) LoadCDROM(r *request.LoadCDROMRequest) (*upcloud.ServerDetails, error) {
 	serverDetails := upcloud.ServerDetails{}
-	requestBody, _ := xml.Marshal(r)
-	response, err := s.client.PerformPostRequest(s.client.CreateRequestURL(r.RequestURL()), requestBody)
+	requestBody, _ := json.Marshal(r)
+	response, err := s.client.PerformJSONPostRequest(s.client.CreateRequestURL(r.RequestURL()), requestBody)
 
 	if err != nil {
-		return nil, parseServiceError(err)
+		return nil, parseJSONServiceError(err)
 	}
 
-	xml.Unmarshal(response, &serverDetails)
+	json.Unmarshal(response, &serverDetails)
 
 	return &serverDetails, nil
 }
