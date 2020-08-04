@@ -434,14 +434,14 @@ func (s *Service) AttachStorage(r *request.AttachStorageRequest) (*upcloud.Serve
 // DetachStorage detaches the specified storage from the specified server
 func (s *Service) DetachStorage(r *request.DetachStorageRequest) (*upcloud.ServerDetails, error) {
 	serverDetails := upcloud.ServerDetails{}
-	requestBody, _ := xml.Marshal(r)
-	response, err := s.client.PerformPostRequest(s.client.CreateRequestURL(r.RequestURL()), requestBody)
+	requestBody, _ := json.Marshal(r)
+	response, err := s.client.PerformJSONPostRequest(s.client.CreateRequestURL(r.RequestURL()), requestBody)
 
 	if err != nil {
-		return nil, parseServiceError(err)
+		return nil, parseJSONServiceError(err)
 	}
 
-	xml.Unmarshal(response, &serverDetails)
+	json.Unmarshal(response, &serverDetails)
 
 	return &serverDetails, nil
 }

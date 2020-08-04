@@ -112,6 +112,11 @@ type AttachStorageRequest struct {
 	BootDisk    int    `xml:"-" json:"boot_disk,omitempty,string"`
 }
 
+// RequestURL implements the Request interface
+func (r *AttachStorageRequest) RequestURL() string {
+	return fmt.Sprintf("/server/%s/storage/attach", r.ServerUUID)
+}
+
 // MarshalJSON is a custom marshaller that deals with
 // deeply embedded values.
 func (r AttachStorageRequest) MarshalJSON() ([]byte, error) {
@@ -124,22 +129,29 @@ func (r AttachStorageRequest) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&v)
 }
 
-// RequestURL implements the Request interface
-func (r *AttachStorageRequest) RequestURL() string {
-	return fmt.Sprintf("/server/%s/storage/attach", r.ServerUUID)
-}
-
 // DetachStorageRequest represents a request to detach a storage device from a server
 type DetachStorageRequest struct {
-	XMLName    xml.Name `xml:"storage_device"`
-	ServerUUID string   `xml:"-"`
+	XMLName    xml.Name `xml:"storage_device" json:"-"`
+	ServerUUID string   `xml:"-" json:"-"`
 
-	Address string `xml:"address"`
+	Address string `xml:"address" json:"address"`
 }
 
 // RequestURL implements the Request interface
 func (r *DetachStorageRequest) RequestURL() string {
 	return fmt.Sprintf("/server/%s/storage/detach", r.ServerUUID)
+}
+
+// MarshalJSON is a custom marshaller that deals with
+// deeply embedded values.
+func (r DetachStorageRequest) MarshalJSON() ([]byte, error) {
+	type localDetachStorageRequest DetachStorageRequest
+	v := struct {
+		DetachStorageRequest localDetachStorageRequest `json:"storage_device"`
+	}{}
+	v.DetachStorageRequest = localDetachStorageRequest(r)
+
+	return json.Marshal(&v)
 }
 
 //DeleteStorageRequest represents a request to delete a storage device

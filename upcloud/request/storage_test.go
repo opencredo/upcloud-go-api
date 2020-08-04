@@ -123,10 +123,16 @@ func TestDetachStorageRequest(t *testing.T) {
 		Address:    "scsi:0:0",
 	}
 
-	expectedXML := "<storage_device><address>scsi:0:0</address></storage_device>"
-	actualXML, err := xml.Marshal(&request)
-	assert.Nil(t, err)
-	assert.Equal(t, expectedXML, string(actualXML))
+	expectedJSON := `
+	  {
+        "storage_device": {
+          "address": "scsi:0:0"
+        }
+      }
+	`
+	actualJSON, err := json.Marshal(&request)
+	assert.NoError(t, err)
+	assert.JSONEq(t, expectedJSON, string(actualJSON))
 	assert.Equal(t, "/server/foo/storage/detach", request.RequestURL())
 }
 
