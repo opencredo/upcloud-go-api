@@ -9,13 +9,13 @@ interactions:
       - application/json
       Content-Type:
       - application/json
-    url: https://api.upcloud.com/1.2/account
+    url: https://api.upcloud.com/1.3/account
     method: GET
   response:
     body: |
       {
          "account" : {
-            "credits" : 992745.0452,
+            "credits" : 992660.7912,
             "resource_limits" : {
                "cores" : 100,
                "detached_floating_ips" : null,
@@ -35,7 +35,7 @@ interactions:
       Content-Type:
       - application/json; charset=UTF-8
       Date:
-      - Wed, 05 Aug 2020 09:01:46 GMT
+      - Wed, 05 Aug 2020 10:15:39 GMT
       Server:
       - Apache
       Strict-Transport-Security:
