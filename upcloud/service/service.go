@@ -68,7 +68,7 @@ func (s *Service) GetPriceZones() (*upcloud.PriceZones, error) {
 // GetTimeZones returns the available timezones
 func (s *Service) GetTimeZones() (*upcloud.TimeZones, error) {
 	zones := upcloud.TimeZones{}
-	response, err := s.basicJSONGetRequest("/timezone")
+	response, err := s.basicFutureGetRequest("/timezone")
 
 	if err != nil {
 		return nil, err
@@ -82,7 +82,7 @@ func (s *Service) GetTimeZones() (*upcloud.TimeZones, error) {
 // GetPlans returns the available service plans
 func (s *Service) GetPlans() (*upcloud.Plans, error) {
 	plans := upcloud.Plans{}
-	response, err := s.basicJSONGetRequest("/plan")
+	response, err := s.basicFutureGetRequest("/plan")
 
 	if err != nil {
 		return nil, err
@@ -96,7 +96,7 @@ func (s *Service) GetPlans() (*upcloud.Plans, error) {
 // GetServerConfigurations returns the available pre-configured server configurations
 func (s *Service) GetServerConfigurations() (*upcloud.ServerConfigurations, error) {
 	serverConfigurations := upcloud.ServerConfigurations{}
-	response, err := s.basicJSONGetRequest("/server_size")
+	response, err := s.basicFutureGetRequest("/server_size")
 
 	if err != nil {
 		return nil, err
@@ -110,7 +110,7 @@ func (s *Service) GetServerConfigurations() (*upcloud.ServerConfigurations, erro
 // GetServers returns the available servers
 func (s *Service) GetServers() (*upcloud.Servers, error) {
 	servers := upcloud.Servers{}
-	response, err := s.basicJSONGetRequest("/server")
+	response, err := s.basicFutureGetRequest("/server")
 
 	if err != nil {
 		return nil, err
@@ -268,7 +268,7 @@ func (s *Service) ModifyServer(r *request.ModifyServerRequest) (*upcloud.ServerD
 
 // DeleteServer deletes the specified server
 func (s *Service) DeleteServer(r *request.DeleteServerRequest) error {
-	err := s.client.PerformJSONDeleteRequest(s.client.CreateRequestURL(r.RequestURL()))
+	err := s.client.PerformJSONDeleteRequest(s.client.CreateFutureRequestURL(r.RequestURL()))
 
 	if err != nil {
 		return parseJSONServiceError(err)
@@ -279,7 +279,7 @@ func (s *Service) DeleteServer(r *request.DeleteServerRequest) error {
 
 // DeleteServerAndStorages deletes the specified server and all attached storages
 func (s *Service) DeleteServerAndStorages(r *request.DeleteServerAndStoragesRequest) error {
-	err := s.client.PerformJSONDeleteRequest(s.client.CreateRequestURL(r.RequestURL()))
+	err := s.client.PerformJSONDeleteRequest(s.client.CreateFutureRequestURL(r.RequestURL()))
 
 	if err != nil {
 		return parseJSONServiceError(err)
@@ -320,7 +320,7 @@ func (s *Service) UntagServer(r *request.UntagServerRequest) (*upcloud.ServerDet
 func (s *Service) CreateTag(r *request.CreateTagRequest) (*upcloud.Tag, error) {
 	tagDetails := upcloud.Tag{}
 	requestBody, _ := json.Marshal(r)
-	response, err := s.client.PerformJSONPostRequest(s.client.CreateRequestURL(r.RequestURL()), requestBody)
+	response, err := s.client.PerformJSONPostRequest(s.client.CreateFutureRequestURL(r.RequestURL()), requestBody)
 
 	if err != nil {
 		return nil, parseJSONServiceError(err)
@@ -335,7 +335,7 @@ func (s *Service) CreateTag(r *request.CreateTagRequest) (*upcloud.Tag, error) {
 func (s *Service) ModifyTag(r *request.ModifyTagRequest) (*upcloud.Tag, error) {
 	tagDetails := upcloud.Tag{}
 	requestBody, _ := json.Marshal(r)
-	response, err := s.client.PerformJSONPutRequest(s.client.CreateRequestURL(r.RequestURL()), requestBody)
+	response, err := s.client.PerformJSONPutRequest(s.client.CreateFutureRequestURL(r.RequestURL()), requestBody)
 
 	if err != nil {
 		return nil, parseJSONServiceError(err)
@@ -348,7 +348,7 @@ func (s *Service) ModifyTag(r *request.ModifyTagRequest) (*upcloud.Tag, error) {
 
 // DeleteTag deletes the specified tag
 func (s *Service) DeleteTag(r *request.DeleteTagRequest) error {
-	err := s.client.PerformJSONDeleteRequest(s.client.CreateRequestURL(r.RequestURL()))
+	err := s.client.PerformJSONDeleteRequest(s.client.CreateFutureRequestURL(r.RequestURL()))
 
 	if err != nil {
 		return parseJSONServiceError(err)
@@ -360,7 +360,7 @@ func (s *Service) DeleteTag(r *request.DeleteTagRequest) error {
 // GetStorages returns all available storages
 func (s *Service) GetStorages(r *request.GetStoragesRequest) (*upcloud.Storages, error) {
 	storages := upcloud.Storages{}
-	response, err := s.basicJSONGetRequest(r.RequestURL())
+	response, err := s.basicFutureGetRequest(r.RequestURL())
 
 	if err != nil {
 		return nil, err
@@ -374,7 +374,7 @@ func (s *Service) GetStorages(r *request.GetStoragesRequest) (*upcloud.Storages,
 // GetStorageDetails returns extended details about the specified piece of storage
 func (s *Service) GetStorageDetails(r *request.GetStorageDetailsRequest) (*upcloud.StorageDetails, error) {
 	storageDetails := upcloud.StorageDetails{}
-	response, err := s.basicJSONGetRequest(r.RequestURL())
+	response, err := s.basicFutureGetRequest(r.RequestURL())
 
 	if err != nil {
 		return nil, err
@@ -389,7 +389,7 @@ func (s *Service) GetStorageDetails(r *request.GetStorageDetailsRequest) (*upclo
 func (s *Service) CreateStorage(r *request.CreateStorageRequest) (*upcloud.StorageDetails, error) {
 	storageDetails := upcloud.StorageDetails{}
 	requestBody, _ := json.Marshal(r)
-	response, err := s.client.PerformJSONPostRequest(s.client.CreateRequestURL(r.RequestURL()), requestBody)
+	response, err := s.client.PerformJSONPostRequest(s.client.CreateFutureRequestURL(r.RequestURL()), requestBody)
 
 	if err != nil {
 		return nil, parseJSONServiceError(err)
@@ -404,7 +404,7 @@ func (s *Service) CreateStorage(r *request.CreateStorageRequest) (*upcloud.Stora
 func (s *Service) ModifyStorage(r *request.ModifyStorageRequest) (*upcloud.StorageDetails, error) {
 	storageDetails := upcloud.StorageDetails{}
 	requestBody, _ := json.Marshal(r)
-	response, err := s.client.PerformJSONPutRequest(s.client.CreateRequestURL(r.RequestURL()), requestBody)
+	response, err := s.client.PerformJSONPutRequest(s.client.CreateFutureRequestURL(r.RequestURL()), requestBody)
 
 	if err != nil {
 		return nil, parseJSONServiceError(err)
@@ -419,7 +419,7 @@ func (s *Service) ModifyStorage(r *request.ModifyStorageRequest) (*upcloud.Stora
 func (s *Service) AttachStorage(r *request.AttachStorageRequest) (*upcloud.ServerDetails, error) {
 	serverDetails := upcloud.ServerDetails{}
 	requestBody, _ := json.Marshal(r)
-	response, err := s.client.PerformJSONPostRequest(s.client.CreateRequestURL(r.RequestURL()), requestBody)
+	response, err := s.client.PerformJSONPostRequest(s.client.CreateFutureRequestURL(r.RequestURL()), requestBody)
 
 	if err != nil {
 		return nil, parseJSONServiceError(err)
@@ -434,7 +434,7 @@ func (s *Service) AttachStorage(r *request.AttachStorageRequest) (*upcloud.Serve
 func (s *Service) DetachStorage(r *request.DetachStorageRequest) (*upcloud.ServerDetails, error) {
 	serverDetails := upcloud.ServerDetails{}
 	requestBody, _ := json.Marshal(r)
-	response, err := s.client.PerformJSONPostRequest(s.client.CreateRequestURL(r.RequestURL()), requestBody)
+	response, err := s.client.PerformJSONPostRequest(s.client.CreateFutureRequestURL(r.RequestURL()), requestBody)
 
 	if err != nil {
 		return nil, parseJSONServiceError(err)
@@ -447,7 +447,7 @@ func (s *Service) DetachStorage(r *request.DetachStorageRequest) (*upcloud.Serve
 
 // DeleteStorage deletes the specified storage device
 func (s *Service) DeleteStorage(r *request.DeleteStorageRequest) error {
-	err := s.client.PerformJSONDeleteRequest(s.client.CreateRequestURL(r.RequestURL()))
+	err := s.client.PerformJSONDeleteRequest(s.client.CreateFutureRequestURL(r.RequestURL()))
 
 	if err != nil {
 		return parseJSONServiceError(err)
@@ -460,7 +460,7 @@ func (s *Service) DeleteStorage(r *request.DeleteStorageRequest) error {
 func (s *Service) CloneStorage(r *request.CloneStorageRequest) (*upcloud.StorageDetails, error) {
 	storageDetails := upcloud.StorageDetails{}
 	requestBody, _ := json.Marshal(r)
-	response, err := s.client.PerformJSONPostRequest(s.client.CreateRequestURL(r.RequestURL()), requestBody)
+	response, err := s.client.PerformJSONPostRequest(s.client.CreateFutureRequestURL(r.RequestURL()), requestBody)
 
 	if err != nil {
 		return nil, parseJSONServiceError(err)
@@ -475,7 +475,7 @@ func (s *Service) CloneStorage(r *request.CloneStorageRequest) (*upcloud.Storage
 func (s *Service) TemplatizeStorage(r *request.TemplatizeStorageRequest) (*upcloud.StorageDetails, error) {
 	storageDetails := upcloud.StorageDetails{}
 	requestBody, _ := json.Marshal(r)
-	response, err := s.client.PerformJSONPostRequest(s.client.CreateRequestURL(r.RequestURL()), requestBody)
+	response, err := s.client.PerformJSONPostRequest(s.client.CreateFutureRequestURL(r.RequestURL()), requestBody)
 
 	if err != nil {
 		return nil, parseJSONServiceError(err)
@@ -519,7 +519,7 @@ func (s *Service) WaitForStorageState(r *request.WaitForStorageStateRequest) (*u
 func (s *Service) LoadCDROM(r *request.LoadCDROMRequest) (*upcloud.ServerDetails, error) {
 	serverDetails := upcloud.ServerDetails{}
 	requestBody, _ := json.Marshal(r)
-	response, err := s.client.PerformJSONPostRequest(s.client.CreateRequestURL(r.RequestURL()), requestBody)
+	response, err := s.client.PerformJSONPostRequest(s.client.CreateFutureRequestURL(r.RequestURL()), requestBody)
 
 	if err != nil {
 		return nil, parseJSONServiceError(err)
@@ -533,7 +533,7 @@ func (s *Service) LoadCDROM(r *request.LoadCDROMRequest) (*upcloud.ServerDetails
 // EjectCDROM ejects the storage from the CD-ROM device of a server
 func (s *Service) EjectCDROM(r *request.EjectCDROMRequest) (*upcloud.ServerDetails, error) {
 	serverDetails := upcloud.ServerDetails{}
-	response, err := s.client.PerformJSONPostRequest(s.client.CreateRequestURL(r.RequestURL()), nil)
+	response, err := s.client.PerformJSONPostRequest(s.client.CreateFutureRequestURL(r.RequestURL()), nil)
 
 	if err != nil {
 		return nil, parseJSONServiceError(err)
@@ -548,7 +548,7 @@ func (s *Service) EjectCDROM(r *request.EjectCDROMRequest) (*upcloud.ServerDetai
 func (s *Service) CreateBackup(r *request.CreateBackupRequest) (*upcloud.StorageDetails, error) {
 	storageDetails := upcloud.StorageDetails{}
 	requestBody, _ := json.Marshal(r)
-	response, err := s.client.PerformJSONPostRequest(s.client.CreateRequestURL(r.RequestURL()), requestBody)
+	response, err := s.client.PerformJSONPostRequest(s.client.CreateFutureRequestURL(r.RequestURL()), requestBody)
 
 	if err != nil {
 		return nil, parseJSONServiceError(err)
@@ -561,7 +561,7 @@ func (s *Service) CreateBackup(r *request.CreateBackupRequest) (*upcloud.Storage
 
 // RestoreBackup creates a backup of the specified storage
 func (s *Service) RestoreBackup(r *request.RestoreBackupRequest) error {
-	_, err := s.client.PerformJSONPostRequest(s.client.CreateRequestURL(r.RequestURL()), nil)
+	_, err := s.client.PerformJSONPostRequest(s.client.CreateFutureRequestURL(r.RequestURL()), nil)
 
 	if err != nil {
 		return parseJSONServiceError(err)
@@ -630,7 +630,7 @@ func (s *Service) ModifyIPAddress(r *request.ModifyIPAddressRequest) (*upcloud.I
 
 // ReleaseIPAddress releases the specified IP address from the server it is attached to
 func (s *Service) ReleaseIPAddress(r *request.ReleaseIPAddressRequest) error {
-	err := s.client.PerformJSONDeleteRequest(s.client.CreateRequestURL(r.RequestURL()))
+	err := s.client.PerformJSONDeleteRequest(s.client.CreateFutureRequestURL(r.RequestURL()))
 
 	if err != nil {
 		return parseJSONServiceError(err)
@@ -642,7 +642,7 @@ func (s *Service) ReleaseIPAddress(r *request.ReleaseIPAddressRequest) error {
 // GetFirewallRules returns the firewall rules for the specified server
 func (s *Service) GetFirewallRules(r *request.GetFirewallRulesRequest) (*upcloud.FirewallRules, error) {
 	firewallRules := upcloud.FirewallRules{}
-	response, err := s.basicJSONGetRequest(r.RequestURL())
+	response, err := s.basicFutureGetRequest(r.RequestURL())
 
 	if err != nil {
 		return nil, err
@@ -656,7 +656,7 @@ func (s *Service) GetFirewallRules(r *request.GetFirewallRulesRequest) (*upcloud
 // GetFirewallRuleDetails returns extended details about the specified firewall rule
 func (s *Service) GetFirewallRuleDetails(r *request.GetFirewallRuleDetailsRequest) (*upcloud.FirewallRule, error) {
 	firewallRule := upcloud.FirewallRule{}
-	response, err := s.basicJSONGetRequest(r.RequestURL())
+	response, err := s.basicFutureGetRequest(r.RequestURL())
 
 	if err != nil {
 		return nil, parseJSONServiceError(err)
@@ -671,7 +671,7 @@ func (s *Service) GetFirewallRuleDetails(r *request.GetFirewallRuleDetailsReques
 func (s *Service) CreateFirewallRule(r *request.CreateFirewallRuleRequest) (*upcloud.FirewallRule, error) {
 	firewallRule := upcloud.FirewallRule{}
 	requestBody, _ := json.Marshal(r)
-	response, err := s.client.PerformJSONPostRequest(s.client.CreateRequestURL(r.RequestURL()), requestBody)
+	response, err := s.client.PerformJSONPostRequest(s.client.CreateFutureRequestURL(r.RequestURL()), requestBody)
 
 	if err != nil {
 		return nil, parseJSONServiceError(err)
@@ -684,7 +684,7 @@ func (s *Service) CreateFirewallRule(r *request.CreateFirewallRuleRequest) (*upc
 
 // DeleteFirewallRule deletes the specified firewall rule
 func (s *Service) DeleteFirewallRule(r *request.DeleteFirewallRuleRequest) error {
-	err := s.client.PerformJSONDeleteRequest(s.client.CreateRequestURL(r.RequestURL()))
+	err := s.client.PerformJSONDeleteRequest(s.client.CreateFutureRequestURL(r.RequestURL()))
 
 	if err != nil {
 		return parseJSONServiceError(err)
@@ -696,7 +696,7 @@ func (s *Service) DeleteFirewallRule(r *request.DeleteFirewallRuleRequest) error
 // GetTags returns all tags
 func (s *Service) GetTags() (*upcloud.Tags, error) {
 	tags := upcloud.Tags{}
-	response, err := s.basicJSONGetRequest("/tag")
+	response, err := s.basicFutureGetRequest("/tag")
 
 	if err != nil {
 		return nil, err
